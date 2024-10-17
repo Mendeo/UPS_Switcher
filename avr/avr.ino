@@ -12,13 +12,16 @@
 #define COMP_NOT_READY_2_ERROR 1000
 #define LOW_BATTERY_ERROR 3000
 
-#define TIME_FOR_COMP_POWEROFF 60000
-#define TIME_FOR_UPS_POWEROFF_AFTER_COMP 60000
+#define TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN 60000
+#define TIME_FOR_UPS_POWEROFF_AFTER_COMP 30000
 #define TIME_BEFORE_COMP_POWERON 30000
+#define TIME_BEFORE_DEEP_SLEEP 30000
 
 volatile unsigned long _eventTime;
 bool _compIsOn = true;
+bool _isMainPower = true;
 Servo _srv;
+volatile bool _lineIsOk = true;
 
 void setup()
 {
@@ -32,47 +35,50 @@ void setup()
   pinMode(SERVO_CONTROL, INPUT);
 
   switchToMainPower();
-  if (!lineIsOk()) blink(-1);
+  checkLine();
+  if (!_lineIsOk) blink(-1);
   Serial.begin(9600);
   Serial.println("status");
   delay(1000);
   if (!Serial.available()) blink(COMP_NOT_READY_1_ERROR);
   if (Serial.readString() != "ok") blink(COMP_NOT_READY_2_ERROR);
-
   prepareADCForVCCmeasuring();
-  attachInterruptToLineDown();
-  sleep();
 }
 
 void onLineDown()
 {
   detachInterrupt(digitalPinToInterrupt(LINE_STATUS));
-  _eventTime = millis();
+  checkLine();
 }
 
 void onLineUp()
 {
   detachInterrupt(digitalPinToInterrupt(LINE_STATUS));
-  _eventTime = millis();
+  checkLine();
 }
 
 void loop()
 {
-  if (_compIsOn && !lineIsOk() && (millis() - _eventTime) >= TIME_FOR_COMP_POWEROFF)
+  if (_isMainPower && _compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_DEEP_SLEEP)
+  {
+    attachInterruptToLineDown();
+    sleep();
+  }
+  else if (_isMainPower && _compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN)
   {
     Serial.println("poweroff");
     waitForCompPowerOff();
     _eventTime = millis();
     _compIsOn = false;
   }
-  else if (!_compIsOn && !lineIsOk() && (millis() - _eventTime) >= TIME_FOR_UPS_POWEROFF_AFTER_COMP)
+  else if (_isMainPower && !_compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_FOR_UPS_POWEROFF_AFTER_COMP)
   {
     switchToBatteryPower();
     switchUPS();
     attachInterruptToLineUp();
     sleep();
   }
-  else if (!_compIsOn && lineIsOk() && (millis() - _eventTime) >= TIME_BEFORE_COMP_POWERON)
+  else if (!_isMainPower && !_compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_COMP_POWERON)
   {
     switchUPS();
     switchToMainPower();
@@ -81,6 +87,28 @@ void loop()
     attachInterruptToLineDown();
     sleep();
   }
+  else if (!_isMainPower && !_compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_DEEP_SLEEP)
+  {
+    attachInterruptToLineUp();
+    sleep();
+  }
+  else if (_isMainPower && !_compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_COMP_POWERON)
+  {
+    switchToBatteryPower();
+    switchUPS();
+    delay(3000);
+    switchUPS();
+    switchToMainPower();
+    _compIsOn = true;
+    waitForCompPowerOn();
+    attachInterruptToLineDown();
+    sleep();
+  }
+  else if (!_isMainPower && _compIsOn)
+  {
+    _compIsOn = false;
+  }
+  checkLine();
 }
 
 void switchUPS()
@@ -146,9 +174,14 @@ void attachInterruptToLineUp()
   attachInterrupt(digitalPinToInterrupt(LINE_STATUS), onLineDown, RISING);
 }
 
-bool lineIsOk()
+void checkLine()
 {
-  return digitalRead(LINE_STATUS);
+  bool currentValue = digitalRead(LINE_STATUS);
+  if (currentValue != _lineIsOk)
+  {
+    _lineIsOk = currentValue;
+    _eventTime = millis();
+  }
 }
 
 void switchToMainPower()
@@ -156,6 +189,7 @@ void switchToMainPower()
   digitalWrite(BAT_POWER, LOW);
   delay(2);
   digitalWrite(UPS_POWER, HIGH);
+  _isMainPower = true;
 }
 
 void switchToBatteryPower()
@@ -163,7 +197,9 @@ void switchToBatteryPower()
   digitalWrite(UPS_POWER, LOW);
   delay(2);
   digitalWrite(BAT_POWER, HIGH);
+  delay(50);
   if (getVCC() < 4.7) blink(LOW_BATTERY_ERROR);
+  _isMainPower = false;
 }
 
 void blink(int period)
