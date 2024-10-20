@@ -11,6 +11,7 @@
 #define COMP_NOT_READY_1_ERROR 500
 #define COMP_NOT_READY_2_ERROR 1000
 #define LOW_BATTERY_ERROR 3000
+#define SWITCH_POWER_ERROR 250
 
 #define TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN 60000
 #define TIME_FOR_UPS_POWEROFF_AFTER_COMP 30000
@@ -186,20 +187,58 @@ void checkLine()
 
 void switchToMainPower()
 {
-  digitalWrite(BAT_POWER, LOW);
-  delay(2);
-  digitalWrite(UPS_POWER, HIGH);
-  _isMainPower = true;
+  switchPower(true);
 }
 
 void switchToBatteryPower()
 {
-  digitalWrite(UPS_POWER, LOW);
-  delay(2);
-  digitalWrite(BAT_POWER, HIGH);
-  delay(50);
-  if (getVCC() < 4.7) blink(LOW_BATTERY_ERROR);
-  _isMainPower = false;
+  switchPower(false);
+}
+
+void switchPower(bool toMainPower)
+{
+  if (toMainPower)
+  {
+    digitalWrite(BAT_POWER, LOW);
+  }
+  else
+  {
+    digitalWrite(UPS_POWER, LOW);
+  }
+  turnOnADC();
+  unsigned long time = millis();
+  while (getVCC() > 4.7)
+  {
+    if (millis() - time > 150)
+    {
+      turnOffADC();
+      if (toMainPower)
+      {
+        digitalWrite(BAT_POWER, HIGH);
+      }
+      else
+      {
+        digitalWrite(UPS_POWER, HIGH);
+      }
+      blink(SWITCH_POWER_ERROR);
+    }
+  }
+  if (toMainPower)
+  {
+    digitalWrite(UPS_POWER, HIGH);
+  }
+  else
+  {
+    digitalWrite(BAT_POWER, HIGH);
+  }
+  delay(150);
+  if (getVCC() < 4.7)
+  {
+    turnOffADC();
+    blink(LOW_BATTERY_ERROR);
+  }
+  turnOffADC();
+  _isMainPower = toMainPower;
 }
 
 void blink(int period)
@@ -234,10 +273,19 @@ void prepareADCForVCCmeasuring()
   ADCSRA |= (0 << ADEN) | (0 << ADATE);; //Пока выключаем АЦП. (ADATE = 0 - выключает постоянное считывание значение по триггеру)
 }
 
+void turnOnADC()
+{
+  ADCSRA |= (1 << ADEN); //Включили АЦП.
+}
+
+void turnOffADC()
+{
+  ADCSRA |= (0 << ADEN); //Выключили АЦП.
+}
+
 float getVCC()
 {
   int n = 3; //Количество преобразований.
-  ADCSRA |= (1 << ADEN); //Включили АЦП.
   int ADC_sum = 0;
   for (int i = 0; i < n; i++)
   {
@@ -245,6 +293,5 @@ float getVCC()
     while (ADCSRA & (1 << ADSC)) {} //Ждём пока не закончится преобразование (тогда ADSC снова станет нулём)
     ADC_sum += ADC;
   }
-  ADCSRA |= (0 << ADEN); //Выключили АЦП.
   return 1.1 * 1023.0 / ((float)ADC_sum / (float)n);
 }
