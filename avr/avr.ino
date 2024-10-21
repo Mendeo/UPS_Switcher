@@ -3,15 +3,16 @@
 
 #define LINE_STATUS 2
 #define LED 13
-#define UPS_POWER 7
-#define BAT_POWER 8
+#define UPS_POWER_STATUS 7
 #define SERVO_POWER 9
 #define SERVO_CONTROL 10
+#define COMP_POWER_OFF_COMMAND 8
+#define COMP_STATUS 11
+#define MAIN_POWER_STATUS 12
 
 #define COMP_NOT_READY_1_ERROR 500
-#define COMP_NOT_READY_2_ERROR 1000
 #define LOW_BATTERY_ERROR 3000
-#define SWITCH_POWER_ERROR 250
+#define SWITCHING_POWER_ERROR 1000
 
 #define TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN 60000
 #define TIME_FOR_UPS_POWEROFF_AFTER_COMP 30000
@@ -28,21 +29,21 @@ void setup()
 {
   pinMode(LED, OUTPUT);
   digitalWrite(LED, LOW);
-  pinMode(UPS_POWER, OUTPUT);
-  pinMode(BAT_POWER, OUTPUT);
+  pinMode(UPS_POWER_STATUS, INPUT);
   pinMode(LINE_STATUS, INPUT);
   pinMode(SERVO_POWER, OUTPUT);
   digitalWrite(SERVO_POWER, LOW);
   pinMode(SERVO_CONTROL, INPUT);
+  pinMode(COMP_POWER_OFF_COMMAND, OUTPUT);
+  pinMode(COMP_STATUS, INPUT);
+  pinMode(MAIN_POWER_STATUS, INPUT);
 
-  switchToMainPower();
+  compPowerOn();
   checkLine();
   if (!_lineIsOk) blink(-1);
-  Serial.begin(9600);
-  Serial.println("status");
   delay(1000);
-  if (!Serial.available()) blink(COMP_NOT_READY_1_ERROR);
-  if (Serial.readString() != "ok") blink(COMP_NOT_READY_2_ERROR);
+  if (!digitalRead(MAIN_POWER_STATUS)) blink(SWITCHING_POWER_ERROR);
+  if (!digitalRead(COMP_STATUS)) blink(COMP_NOT_READY_1_ERROR);
   prepareADCForVCCmeasuring();
 }
 
@@ -67,14 +68,13 @@ void loop()
   }
   else if (_isMainPower && _compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN)
   {
-    Serial.println("poweroff");
+    compPowerOff();
     waitForCompPowerOff();
     _eventTime = millis();
     _compIsOn = false;
   }
   else if (_isMainPower && !_compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_FOR_UPS_POWEROFF_AFTER_COMP)
   {
-    switchToBatteryPower();
     switchUPS();
     attachInterruptToLineUp();
     sleep();
@@ -82,9 +82,9 @@ void loop()
   else if (!_isMainPower && !_compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_COMP_POWERON)
   {
     switchUPS();
-    switchToMainPower();
-    _compIsOn = true;
+    compPowerOn();
     waitForCompPowerOn();
+    _compIsOn = true;
     attachInterruptToLineDown();
     sleep();
   }
@@ -95,13 +95,12 @@ void loop()
   }
   else if (_isMainPower && !_compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_COMP_POWERON)
   {
-    switchToBatteryPower();
     switchUPS();
     delay(3000);
     switchUPS();
-    switchToMainPower();
-    _compIsOn = true;
+    compPowerOn();
     waitForCompPowerOn();
+    _compIsOn = true;
     attachInterruptToLineDown();
     sleep();
   }
@@ -112,8 +111,19 @@ void loop()
   checkLine();
 }
 
+void compPowerOff()
+{
+  digitalWrite(COMP_POWER_OFF_COMMAND, HIGH);
+}
+
+void compPowerOn()
+{
+  digitalWrite(COMP_POWER_OFF_COMMAND, LOW);
+}
+
 void switchUPS()
 {
+  int mainPowerStatus = digitalRead(MAIN_POWER_STATUS);
   digitalWrite(SERVO_POWER, HIGH);
   delay(3);
   pinMode(SERVO_CONTROL, OUTPUT);
@@ -125,14 +135,32 @@ void switchUPS()
     _srv.write(angle);
     delay(20);
   }
-  delay(100);
+  delay(50);
   _srv.write(0);
   delay(500);
   _srv.detach();
-  delay(100);
-  digitalWrite(SERVO_POWER, LOW);
-  delay(3);
   pinMode(SERVO_CONTROL, INPUT);
+  digitalWrite(SERVO_POWER, LOW);
+  unsigned long time = millis();
+  while (mainPowerStatus == digitalRead(MAIN_POWER_STATUS))
+  {
+    if (millis() - time > 5000) //Основное питание с ардуины должно пропасть или появится не позже, чем через 5 секунд.
+    {
+      blink(SWITCHING_POWER_ERROR);
+    }
+  }
+  _isMainPower = !_isMainPower;
+  if (!_isMainPower)
+  {
+    turnOnADC();
+    delay(20);
+    float VCC = getVCC();
+    turnOffADC();
+    if (VCC < 4.6)
+    {
+      blink(LOW_BATTERY_ERROR);
+    }
+  }
 }
 
 void sleep()
@@ -142,28 +170,12 @@ void sleep()
 
 void waitForCompPowerOff()
 {
-  while (true)
-  {
-    while (Serial.available())
-    {
-      Serial.read();
-    }
-    delay(500);
-    if (!Serial.available()) break;
-  }
+  while (digitalRead(COMP_STATUS)) {}
 }
 
 void waitForCompPowerOn()
 {
-  unsigned long time = millis();
-  while (!Serial.available())
-  {
-    if (millis() - time > 180000) break; //Ждём не больше 3-х минут.
-  }
-  while (Serial.available())
-  {
-    Serial.read();
-  }
+  while (!digitalRead(COMP_STATUS)) {}
 }
 
 void attachInterruptToLineDown()
@@ -177,68 +189,12 @@ void attachInterruptToLineUp()
 
 void checkLine()
 {
-  bool currentValue = digitalRead(LINE_STATUS);
+  bool currentValue = !digitalRead(LINE_STATUS);
   if (currentValue != _lineIsOk)
   {
     _lineIsOk = currentValue;
     _eventTime = millis();
   }
-}
-
-void switchToMainPower()
-{
-  switchPower(true);
-}
-
-void switchToBatteryPower()
-{
-  switchPower(false);
-}
-
-void switchPower(bool toMainPower)
-{
-  if (toMainPower)
-  {
-    digitalWrite(BAT_POWER, LOW);
-  }
-  else
-  {
-    digitalWrite(UPS_POWER, LOW);
-  }
-  turnOnADC();
-  unsigned long time = millis();
-  while (getVCC() > 4.7)
-  {
-    if (millis() - time > 150)
-    {
-      turnOffADC();
-      if (toMainPower)
-      {
-        digitalWrite(BAT_POWER, HIGH);
-      }
-      else
-      {
-        digitalWrite(UPS_POWER, HIGH);
-      }
-      blink(SWITCH_POWER_ERROR);
-    }
-  }
-  if (toMainPower)
-  {
-    digitalWrite(UPS_POWER, HIGH);
-  }
-  else
-  {
-    digitalWrite(BAT_POWER, HIGH);
-  }
-  delay(150);
-  if (getVCC() < 4.7)
-  {
-    turnOffADC();
-    blink(LOW_BATTERY_ERROR);
-  }
-  turnOffADC();
-  _isMainPower = toMainPower;
 }
 
 void blink(int period)
