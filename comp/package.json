@@ -1,0 +1,19 @@
+{
+  "name": "comp",
+  "version": "1.0.0",
+  "description": "Программа, отключающая машину, если пропадает внешнее питание. Работает в паре с микроконтроллером.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "arduino",
+    "ups",
+    "poweroff"
+  ],
+  "author": "Themen",
+  "license": "MIT",
+  "dependencies": {
+    "onoff": "^6.0.3"
+  }
+}
