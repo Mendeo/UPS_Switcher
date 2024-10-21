@@ -1,6 +1,8 @@
 #include <LowPower.h>
 #include <Servo.h>
 
+#define INTERNAL_REF_REAL_VOLTAGE 1.1
+
 #define LINE_STATUS 2
 #define LED 13
 #define UPS_POWER_STATUS 7
@@ -249,5 +251,5 @@ float getVCC()
     while (ADCSRA & (1 << ADSC)) {} //Ждём пока не закончится преобразование (тогда ADSC снова станет нулём)
     ADC_sum += ADC;
   }
-  return 1.1 * 1023.0 / ((float)ADC_sum / (float)n);
+  return INTERNAL_REF_REAL_VOLTAGE * 1023.0 / ((float)ADC_sum / (float)n);
 }
