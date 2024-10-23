@@ -161,10 +161,7 @@ void switchUPS()
   }
   else
   {
-    turnOnADC();
-    delay(20);
     float VCC = getVCC();
-    turnOffADC();
     if (VCC < 4.6)
     {
       blink(LOW_BATTERY_ERROR);
@@ -249,6 +246,15 @@ void turnOffADC()
 }
 
 float getVCC()
+{
+  turnOnADC();
+  delay(20);
+  float VCC = getVCC_common();
+  turnOffADC();
+  return VCC;
+}
+
+float getVCC_common()
 {
   int n = 3; //Количество преобразований.
   int ADC_sum = 0;
