@@ -6,6 +6,7 @@
 #define LINE_STATUS 2
 #define LED 13
 #define UPS_POWER_STATUS 7
+#define BAT_5V_REGULATOR 6
 #define SERVO_POWER 9
 #define SERVO_CONTROL 10
 #define COMP_POWER_OFF_COMMAND 8
@@ -125,7 +126,8 @@ void compPowerOn()
 
 void switchUPS()
 {
-  int mainPowerStatus = digitalRead(MAIN_POWER_STATUS);
+  _isMainPower = digitalRead(MAIN_POWER_STATUS);
+  if (_isMainPower) digitalWrite(BAT_5V_REGULATOR, HIGH);
   digitalWrite(SERVO_POWER, HIGH);
   delay(3);
   pinMode(SERVO_CONTROL, OUTPUT);
@@ -144,15 +146,20 @@ void switchUPS()
   pinMode(SERVO_CONTROL, INPUT);
   digitalWrite(SERVO_POWER, LOW);
   unsigned long time = millis();
-  while (mainPowerStatus == digitalRead(MAIN_POWER_STATUS))
+  while (_isMainPower == digitalRead(MAIN_POWER_STATUS))
   {
     if (millis() - time > 5000) //Основное питание с ардуины должно пропасть или появится не позже, чем через 5 секунд.
     {
+      if (_isMainPower) digitalWrite(BAT_5V_REGULATOR, LOW);
       blink(SWITCHING_POWER_ERROR);
     }
   }
   _isMainPower = !_isMainPower;
-  if (!_isMainPower)
+  if (_isMainPower)
+  {
+    digitalWrite(BAT_5V_REGULATOR, LOW);
+  }
+  else
   {
     turnOnADC();
     delay(20);
