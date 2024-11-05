@@ -1,24 +1,31 @@
-set serialport [open "com2" r+]
+set serialport [open [lindex $argv 0] r+]
 fconfigure $serialport -blocking 0 -buffering none -mode 9600,n,8,1 -translation binary -eofchar {}
-fileevent $serialport readable onSerialInput
 
-fconfigure stdin -blocking 0 -buffering none -translation lf -eofchar {}
-fileevent stdin readable onSerialOutput
+proc sendAlive {} {
+	global serialport
+	puts -nonewline $serialport "+"
+	after 500 sendAlive
+}
 
+set needSendAliveOn true
 proc onSerialInput {} {
 	global serialport
 	set chunk [read $serialport]
-	puts -nonewline $chunk
-	flush stdout
-	if {[string equal $chunk q\r\n] || [string equal $chunk q\n]} {
-		global forever
-		set forever 1
+	if { [string equal $chunk "s"]} {
+		catch {exec poweroff} result
+		puts $result
+		global exitProgram
+		set exitProgram 1
+	} elseif {[string equal $chunk "a"]} {
+		global needSendAliveOn
+		if {$needSendAliveOn} {
+			set needSendAliveOn false
+			sendAlive
+		}
 	}
-}
-proc onSerialOutput {} {
-	global serialport
-	set chunk [read stdin]
-	puts -nonewline $serialport $chunk
+	# puts -nonewline $chunk
+	# flush stdout
 }
 
-vwait forever
+fileevent $serialport readable onSerialInput
+vwait exitProgram
