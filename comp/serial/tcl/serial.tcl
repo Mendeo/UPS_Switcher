@@ -10,10 +10,6 @@ proc onSerialInput {} {
 	set chunk [read $serialport]
 	puts -nonewline $chunk
 	flush stdout
-	if {[string equal $chunk q\r\n] || [string equal $chunk q\n]} {
-		global forever
-		set forever 1
-	}
 }
 proc onSerialOutput {} {
 	global serialport
