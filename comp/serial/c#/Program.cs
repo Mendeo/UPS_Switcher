@@ -11,8 +11,9 @@ void onSerialInput(Object sender, SerialDataReceivedEventArgs e)
 	Console.Write(chunk);
 }
 
-Task.Run(() =>
+Task inputTask = new Task(() =>
 {
 	while (true) port.Write(Console.ReadLine() + "\r\n");
-}).Wait();
-
+}, TaskCreationOptions.LongRunning);
+inputTask.Start();
+inputTask.Wait();
