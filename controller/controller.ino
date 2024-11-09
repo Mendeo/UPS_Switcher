@@ -3,24 +3,23 @@
 
 #define INTERNAL_REF_REAL_VOLTAGE 1.1
 
-#define LINE_STATUS 2
 #define LED 13
-#define UPS_POWER_STATUS 7
-#define BAT_5V_REGULATOR 6
-#define SERVO_POWER 9
-#define SERVO_CONTROL 10
-#define COMP_POWER_OFF_COMMAND 8
-#define COMP_STATUS 11
-#define MAIN_POWER_STATUS 12
+#define LINE_STATUS 2
+#define BAT_5V_REGULATOR 10
+#define SERVO_POWER 7
+#define SERVO_CONTROL 4
+#define COMP_POWER_OFF_COMMAND 5
+#define COMP_STATUS 6
+#define MAIN_POWER_STATUS 3
 
 #define COMP_NOT_READY_1_ERROR 500
 #define LOW_BATTERY_ERROR 3000
 #define SWITCHING_POWER_ERROR 1000
 
-#define TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN 60000
-#define TIME_FOR_UPS_POWEROFF_AFTER_COMP 30000
-#define TIME_BEFORE_COMP_POWERON 30000
-#define TIME_BEFORE_DEEP_SLEEP 30000
+#define TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN 10000
+#define TIME_FOR_UPS_POWEROFF_AFTER_COMP 10000
+#define TIME_BEFORE_COMP_POWERON 10000
+#define TIME_BEFORE_DEEP_SLEEP 10000
 
 volatile unsigned long _eventTime;
 bool _compIsOn = true;
@@ -30,24 +29,29 @@ volatile bool _lineIsOk = true;
 
 void setup()
 {
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED, LOW);
-  pinMode(UPS_POWER_STATUS, INPUT);
   pinMode(LINE_STATUS, INPUT);
-  pinMode(SERVO_POWER, OUTPUT);
-  digitalWrite(SERVO_POWER, LOW);
-  pinMode(SERVO_CONTROL, INPUT);
-  pinMode(COMP_POWER_OFF_COMMAND, OUTPUT);
-  pinMode(COMP_STATUS, INPUT);
   pinMode(MAIN_POWER_STATUS, INPUT);
+  pinMode(COMP_STATUS, INPUT);
+
+  pinMode(LED, OUTPUT);
+  pinMode(SERVO_POWER, OUTPUT);
+  pinMode(COMP_POWER_OFF_COMMAND, OUTPUT);
+  pinMode(BAT_5V_REGULATOR, OUTPUT);
+
+  digitalWrite(LED, LOW);
+  digitalWrite(BAT_5V_REGULATOR, HIGH);
+
+  setServoToZero();
 
   compPowerOn();
+  if (!digitalRead(MAIN_POWER_STATUS)) blink(SWITCHING_POWER_ERROR);
+  digitalWrite(BAT_5V_REGULATOR, LOW);
   checkLine();
   if (!_lineIsOk) blink(-1);
   delay(1000);
-  if (!digitalRead(MAIN_POWER_STATUS)) blink(SWITCHING_POWER_ERROR);
   if (!digitalRead(COMP_STATUS)) blink(COMP_NOT_READY_1_ERROR);
   prepareADCForVCCmeasuring();
+  attachInterruptToLineDown();
 }
 
 void onLineDown()
@@ -74,7 +78,6 @@ void loop()
     compPowerOff();
     waitForCompPowerOff();
     _eventTime = millis();
-    _compIsOn = false;
   }
   else if (_isMainPower && !_compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_FOR_UPS_POWEROFF_AFTER_COMP)
   {
@@ -85,9 +88,7 @@ void loop()
   else if (!_isMainPower && !_compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_COMP_POWERON)
   {
     switchUPS();
-    compPowerOn();
     waitForCompPowerOn();
-    _compIsOn = true;
     attachInterruptToLineDown();
     sleep();
   }
@@ -101,9 +102,7 @@ void loop()
     switchUPS();
     delay(3000);
     switchUPS();
-    compPowerOn();
     waitForCompPowerOn();
-    _compIsOn = true;
     attachInterruptToLineDown();
     sleep();
   }
@@ -124,6 +123,17 @@ void compPowerOn()
   digitalWrite(COMP_POWER_OFF_COMMAND, LOW);
 }
 
+void setServoToZero()
+{
+  pinMode(SERVO_CONTROL, OUTPUT);
+  _srv.attach(SERVO_CONTROL);
+  _srv.write(0);
+  delay(500);
+  _srv.detach();
+  pinMode(SERVO_CONTROL, INPUT);
+  digitalWrite(SERVO_POWER, LOW);
+}
+
 void switchUPS()
 {
   _isMainPower = digitalRead(MAIN_POWER_STATUS);
@@ -132,9 +142,9 @@ void switchUPS()
   delay(3);
   pinMode(SERVO_CONTROL, OUTPUT);
   _srv.attach(SERVO_CONTROL);
-  _srv.write(31);
-  delay(20);
-  for (int angle = 32; angle < 43; angle++)
+  _srv.write(20);
+  delay(200);
+  for (int angle = 22; angle < 43; angle++)
   {
     _srv.write(angle);
     delay(20);
@@ -162,7 +172,7 @@ void switchUPS()
   else
   {
     float VCC = getVCC();
-    if (VCC < 4.6)
+    if (VCC < 4.2)
     {
       blink(LOW_BATTERY_ERROR);
     }
@@ -177,20 +187,23 @@ void sleep()
 void waitForCompPowerOff()
 {
   while (digitalRead(COMP_STATUS)) {}
+  compPowerOn();
+   _compIsOn = false;
 }
 
 void waitForCompPowerOn()
 {
   while (!digitalRead(COMP_STATUS)) {}
+   _compIsOn = true;
 }
 
 void attachInterruptToLineDown()
 {
-  attachInterrupt(digitalPinToInterrupt(LINE_STATUS), onLineDown, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LINE_STATUS), onLineDown, HIGH);
 }
 void attachInterruptToLineUp()
 {
-  attachInterrupt(digitalPinToInterrupt(LINE_STATUS), onLineDown, RISING);
+  attachInterrupt(digitalPinToInterrupt(LINE_STATUS), onLineUp, LOW);
 }
 
 void checkLine()
