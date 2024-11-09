@@ -2,6 +2,7 @@
 #include <Servo.h>
 
 #define INTERNAL_REF_REAL_VOLTAGE 1.1
+#define SERVO_ANGLE 50
 
 #define LED 13
 #define LINE_STATUS 2
@@ -15,17 +16,20 @@
 #define COMP_NOT_READY_1_ERROR 500
 #define LOW_BATTERY_ERROR 3000
 #define SWITCHING_POWER_ERROR 1000
+#define LINE_IS_DOWN_ERROR 100
 
 #define TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN 10000
 #define TIME_FOR_UPS_POWEROFF_AFTER_COMP 10000
 #define TIME_BEFORE_COMP_POWERON 10000
 #define TIME_BEFORE_DEEP_SLEEP 10000
 
-volatile unsigned long _eventTime;
+unsigned long _eventTime = 0;
 bool _compIsOn = true;
 bool _isMainPower = true;
 Servo _srv;
-volatile bool _lineIsOk = true;
+bool _lineIsOk = true;
+bool _needSleep = false;
+volatile bool _needCheckLine = true;
 
 void setup()
 {
@@ -38,79 +42,78 @@ void setup()
   pinMode(COMP_POWER_OFF_COMMAND, OUTPUT);
   pinMode(BAT_5V_REGULATOR, OUTPUT);
 
-  digitalWrite(LED, LOW);
+  digitalWrite(LED, HIGH);
   digitalWrite(BAT_5V_REGULATOR, HIGH);
 
-  setServoToZero();
-
+  rotateServo(0);
   compPowerOn();
   if (!digitalRead(MAIN_POWER_STATUS)) blink(SWITCHING_POWER_ERROR);
   digitalWrite(BAT_5V_REGULATOR, LOW);
-  checkLine();
-  if (!_lineIsOk) blink(-1);
-  delay(1000);
-  if (!digitalRead(COMP_STATUS)) blink(COMP_NOT_READY_1_ERROR);
   prepareADCForVCCmeasuring();
-  attachInterruptToLineDown();
+  checkLine();
+  if (!_lineIsOk) blink(LINE_IS_DOWN_ERROR);
+  if (!digitalRead(COMP_STATUS)) blink(COMP_NOT_READY_1_ERROR);
 }
 
 void onLineDown()
 {
   detachInterrupt(digitalPinToInterrupt(LINE_STATUS));
-  checkLine();
+  _needCheckLine = true;
+  digitalWrite(LED, HIGH);
 }
 
 void onLineUp()
 {
   detachInterrupt(digitalPinToInterrupt(LINE_STATUS));
-  checkLine();
+  _needCheckLine = true;
+  digitalWrite(LED, HIGH);
 }
 
 void loop()
 {
-  if (_isMainPower && _compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_DEEP_SLEEP)
+  if (_isMainPower && _compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_DEEP_SLEEP && !_needCheckLine)
   {
-    attachInterruptToLineDown();
-    sleep();
+    _needSleep = true;
   }
-  else if (_isMainPower && _compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN)
+  else if (_isMainPower && _compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN  && !_needCheckLine)
   {
     compPowerOff();
     waitForCompPowerOff();
     _eventTime = millis();
   }
-  else if (_isMainPower && !_compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_FOR_UPS_POWEROFF_AFTER_COMP)
+  else if (_isMainPower && !_compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_FOR_UPS_POWEROFF_AFTER_COMP && !_needCheckLine)
   {
     switchUPS();
-    attachInterruptToLineUp();
-    sleep();
+    _needSleep = true;
   }
-  else if (!_isMainPower && !_compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_COMP_POWERON)
+  else if (!_isMainPower && !_compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_COMP_POWERON && !_needCheckLine)
   {
     switchUPS();
     waitForCompPowerOn();
-    attachInterruptToLineDown();
-    sleep();
+    _needSleep = true;
   }
-  else if (!_isMainPower && !_compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_DEEP_SLEEP)
+  else if (!_isMainPower && !_compIsOn && !_lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_DEEP_SLEEP && !_needCheckLine)
   {
-    attachInterruptToLineUp();
-    sleep();
+    _needSleep = true;
   }
-  else if (_isMainPower && !_compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_COMP_POWERON)
+  else if (_isMainPower && !_compIsOn && _lineIsOk && (millis() - _eventTime) >= TIME_BEFORE_COMP_POWERON && !_needCheckLine)
   {
     switchUPS();
     delay(3000);
     switchUPS();
     waitForCompPowerOn();
-    attachInterruptToLineDown();
-    sleep();
+    _needSleep = true;
   }
-  else if (!_isMainPower && _compIsOn)
+  else if (!_isMainPower && _compIsOn && !_needCheckLine)
   {
     _compIsOn = false;
   }
   checkLine();
+  if (_needSleep)
+  {
+    _needSleep = false;
+    sleep();
+  }
 }
 
 void compPowerOff()
@@ -123,38 +126,29 @@ void compPowerOn()
   digitalWrite(COMP_POWER_OFF_COMMAND, LOW);
 }
 
-void setServoToZero()
+void rotateServo(int angle)
 {
   pinMode(SERVO_CONTROL, OUTPUT);
+  digitalWrite(SERVO_POWER, HIGH);
+  delay(3);
   _srv.attach(SERVO_CONTROL);
-  _srv.write(0);
+  _srv.write(angle);
   delay(500);
+  if (angle > 0)
+  {
+    _srv.write(0);
+    delay(500);
+  }
   _srv.detach();
-  pinMode(SERVO_CONTROL, INPUT);
   digitalWrite(SERVO_POWER, LOW);
+  pinMode(SERVO_CONTROL, INPUT);
 }
 
 void switchUPS()
 {
   _isMainPower = digitalRead(MAIN_POWER_STATUS);
   if (_isMainPower) digitalWrite(BAT_5V_REGULATOR, HIGH);
-  digitalWrite(SERVO_POWER, HIGH);
-  delay(3);
-  pinMode(SERVO_CONTROL, OUTPUT);
-  _srv.attach(SERVO_CONTROL);
-  _srv.write(20);
-  delay(200);
-  for (int angle = 22; angle < 43; angle++)
-  {
-    _srv.write(angle);
-    delay(20);
-  }
-  delay(50);
-  _srv.write(0);
-  delay(500);
-  _srv.detach();
-  pinMode(SERVO_CONTROL, INPUT);
-  digitalWrite(SERVO_POWER, LOW);
+  rotateServo(SERVO_ANGLE);
   unsigned long time = millis();
   while (_isMainPower == digitalRead(MAIN_POWER_STATUS))
   {
@@ -181,6 +175,7 @@ void switchUPS()
 
 void sleep()
 {
+  digitalWrite(LED, LOW);
   LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
 }
 
@@ -208,11 +203,25 @@ void attachInterruptToLineUp()
 
 void checkLine()
 {
-  bool currentValue = !digitalRead(LINE_STATUS);
-  if (currentValue != _lineIsOk)
+  if (_needCheckLine)
   {
-    _lineIsOk = currentValue;
-    _eventTime = millis();
+    _needCheckLine = false;
+    delay(50);
+    bool currentValue = !digitalRead(LINE_STATUS);
+    if (currentValue != _lineIsOk)
+    {
+      _lineIsOk = currentValue;
+      _eventTime = millis();
+      _needSleep = false;
+    }
+    if (_lineIsOk)
+    {
+      attachInterruptToLineDown();
+    }
+    else
+    {
+      attachInterruptToLineUp();
+    }
   }
 }
 
