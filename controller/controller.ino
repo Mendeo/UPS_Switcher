@@ -2,7 +2,7 @@
 #include <Servo.h>
 
 #define INTERNAL_REF_REAL_VOLTAGE 1.1
-#define SERVO_ANGLE 50
+#define SERVO_ANGLE 32
 
 #define LED 13
 #define LINE_STATUS 2
