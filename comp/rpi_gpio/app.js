@@ -35,6 +35,7 @@ function start()
 				{
 					if (powerOffPin.readSync())
 					{
+						console.log('Powering off');
 						exec(POWER_OFF_COMMAND, (err, stdout, stderr) =>
 							{
 								if (err || stderr)
