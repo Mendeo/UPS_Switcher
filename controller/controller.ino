@@ -50,6 +50,7 @@ void setup()
   if (!digitalRead(MAIN_POWER_STATUS)) blink(SWITCHING_POWER_ERROR);
   digitalWrite(BAT_5V_REGULATOR, LOW);
   prepareADCForVCCmeasuring();
+  delay(3000); //На зарядку конденсатора перед первой проверкой линии
   checkLine();
   if (!_lineIsOk) blink(LINE_IS_DOWN_ERROR);
   if (!digitalRead(COMP_STATUS)) blink(COMP_NOT_READY_1_ERROR);
