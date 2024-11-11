@@ -9,7 +9,7 @@ const POWER_OFF_COMMAND = 'poweroff';
   Там будт файл gpiochip<номер смещения>
   Его нужно прописать в переменную GPIO_SHIFT
 */
-const GPIO_SHIFT = 512;
+const GPIO_SHIFT = 0;
 
 if (Gpio.accessible)
 {
