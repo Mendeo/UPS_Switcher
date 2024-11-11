@@ -3,7 +3,13 @@ const { Gpio } = require('onoff');
 const { exec } = require('child_process');
 
 const POWER_OFF_COMMAND = 'poweroff';
-const GPIO_REF = 512;
+
+/*Библиотека onoff не учитывает, что номер GPIO может быть смещён
+  Смещение можно увидеть по пути /sys/class/gpio/
+  Там будт файл gpiochip<номер смещения>
+  Его нужно прописать в переменную GPIO_SHIFT
+*/
+const GPIO_SHIFT = 512;
 
 if (Gpio.accessible)
 {
@@ -16,9 +22,9 @@ else
 
 function start()
 {
-	const powerOffPin = new Gpio(27 + GPIO_REF, 'in', 'rising', { debounceTimeout: 10 });
-	const powerStatusPin = new Gpio(22 + GPIO_REF, 'out');
-	powerStatusPin.writeSync(1);
+	const powerOffPin = new Gpio(27 + GPIO_SHIFT, 'in', 'rising', { debounceTimeout: 10 });
+	const powerStatusPin = new Gpio(22 + GPIO_SHIFT, 'out');
+	powerStatusPin.writeSync(0);
 	
 	let isWaitingPowerOffSignal = true;
 	powerOffPin.watch((err, value) => 
