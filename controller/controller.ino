@@ -23,6 +23,8 @@
 #define TIME_BEFORE_COMP_POWERON 15000
 #define TIME_BEFORE_DEEP_SLEEP 10000
 
+#define BLINK_ERROR_TIME 600000
+
 unsigned long _eventTime = 0;
 bool _compIsOn = true;
 bool _isMainPower = true;
@@ -230,6 +232,7 @@ void blink(int period)
 {
   digitalWrite(LED, HIGH);
   delay(period);
+  unsigned long timer = millis();
   if (period > 0)
   {
     while (true)
@@ -238,11 +241,15 @@ void blink(int period)
       delay(period);
       digitalWrite(LED, HIGH);
       delay(period);
+      if (millis() - timer >= BLINK_ERROR_TIME) sleep();
     }
   }
   else
   {
-    while (true) {}
+    while (true)
+    {
+      if (millis() - timer >= BLINK_ERROR_TIME) sleep();
+    }
   }
 }
 

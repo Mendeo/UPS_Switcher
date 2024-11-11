@@ -1,5 +1,6 @@
 set serialport [open [lindex $argv 0] r+]
 fconfigure $serialport -blocking 0 -buffering none -mode 9600,n,8,1 -translation binary -eofchar {}
+fileevent $serialport readable onSerialInput
 
 proc sendAlive {} {
 	global serialport
@@ -11,12 +12,12 @@ set needSendAliveOn true
 proc onSerialInput {} {
 	global serialport
 	set chunk [read $serialport]
-	if { [string equal $chunk "s"]} {
+	if { [string match *-* $chunk]} {
 		catch {exec poweroff} result
 		puts $result
 		global exitProgram
 		set exitProgram 1
-	} elseif {[string equal $chunk "a"]} {
+	} elseif {[string match *a* $chunk]} {
 		global needSendAliveOn
 		if {$needSendAliveOn} {
 			set needSendAliveOn false
@@ -27,5 +28,4 @@ proc onSerialInput {} {
 	# flush stdout
 }
 
-fileevent $serialport readable onSerialInput
 vwait exitProgram
