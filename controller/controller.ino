@@ -2,7 +2,7 @@
 #include <Servo.h>
 
 #define INTERNAL_REF_REAL_VOLTAGE 1.1
-#define SERVO_ANGLE 32
+#define SERVO_ANGLE 35
 
 #define LED 13
 #define LINE_STATUS 2
@@ -14,13 +14,13 @@
 #define MAIN_POWER_STATUS 3
 
 #define COMP_NOT_READY_1_ERROR 500
-#define LOW_BATTERY_ERROR 3000
+#define LOW_BATTERY_ERROR 5000
 #define SWITCHING_POWER_ERROR 1000
 #define LINE_IS_DOWN_ERROR 100
 
 #define TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN 30000
-#define TIME_FOR_UPS_POWEROFF_AFTER_COMP 30000
-#define TIME_BEFORE_COMP_POWERON 15000
+#define TIME_FOR_UPS_POWEROFF_AFTER_COMP 40000
+#define TIME_BEFORE_COMP_POWERON 20000
 #define TIME_BEFORE_DEEP_SLEEP 10000
 
 #define BLINK_ERROR_TIME 600000
@@ -168,8 +168,9 @@ void switchUPS()
   }
   else
   {
+    delay(3000); //На восстановление напряжения.
     float VCC = getVCC();
-    if (VCC < 4.2)
+    if (VCC < 4.1)
     {
       blink(LOW_BATTERY_ERROR);
     }
