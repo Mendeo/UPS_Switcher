@@ -37,7 +37,7 @@ void setup()
 {
   pinMode(LINE_STATUS, INPUT);
   pinMode(MAIN_POWER_STATUS, INPUT);
-  pinMode(COMP_STATUS, INPUT);
+  pinMode(COMP_STATUS, INPUT_PULLUP);
 
   pinMode(LED, OUTPUT);
   pinMode(SERVO_POWER, OUTPUT);
@@ -55,7 +55,7 @@ void setup()
   delay(3000); //На зарядку конденсатора перед первой проверкой линии
   checkLine();
   if (!_lineIsOk) blink(LINE_IS_DOWN_ERROR);
-  if (!digitalRead(COMP_STATUS)) blink(COMP_NOT_READY_1_ERROR);
+  if (digitalRead(COMP_STATUS)) blink(COMP_NOT_READY_1_ERROR);
 }
 
 void onLineDown()
@@ -184,14 +184,14 @@ void sleep()
 
 void waitForCompPowerOff()
 {
-  while (digitalRead(COMP_STATUS)) {}
+  while (!digitalRead(COMP_STATUS)) {}
   compPowerOn();
    _compIsOn = false;
 }
 
 void waitForCompPowerOn()
 {
-  while (!digitalRead(COMP_STATUS)) {}
+  while (digitalRead(COMP_STATUS)) {}
    _compIsOn = true;
 }
 
