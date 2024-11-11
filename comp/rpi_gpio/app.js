@@ -22,6 +22,7 @@ else
 
 function start()
 {
+	console.log('UPS power control enabled.');
 	const powerOffPin = new Gpio(27 + GPIO_SHIFT, 'in', 'rising', { debounceTimeout: 10 });
 	const powerStatusPin = new Gpio(22 + GPIO_SHIFT, 'out');
 	powerStatusPin.writeSync(0);
