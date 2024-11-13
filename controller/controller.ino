@@ -2,7 +2,8 @@
 #include <Servo.h>
 
 #define INTERNAL_REF_REAL_VOLTAGE 1.1
-#define SERVO_ANGLE 35
+#define SERVO_ANGLE 33
+#define SERVO_PUSH_TIME 400 //Время на нажатие, зависит от угла.
 
 #define LED 13
 #define LINE_STATUS 2
@@ -136,11 +137,11 @@ void rotateServo(int angle)
   delay(3);
   _srv.attach(SERVO_CONTROL);
   _srv.write(angle);
-  delay(500);
+  delay(SERVO_PUSH_TIME);
   if (angle > 0)
   {
     _srv.write(0);
-    delay(500);
+    delay(SERVO_PUSH_TIME);
   }
   _srv.detach();
   digitalWrite(SERVO_POWER, LOW);
