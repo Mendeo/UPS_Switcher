@@ -18,12 +18,12 @@ if (Gpio.accessible)
 	{
 		if (err)
 		{
-			console.log('Error when trying to find GPIO shift: ' + err.message);
+			console.log('Error when trying to find GPIO offset: ' + err.message);
 		}
 		else
 		{
-			const gpioShift = Math.min(...gpioFiles.filter(f => f.startsWith('gpiochip')).map(f => Number(f.slice(8))));
-			start(gpioShift);
+			const gpioOffset = Math.min(...gpioFiles.filter(f => f.startsWith('gpiochip')).map(f => Number(f.slice(8))));
+			start(gpioOffset);
 		}
 	});
 }
@@ -32,11 +32,11 @@ else
 	console.log('System dose not support GPIO.');
 }
 
-function start(gpioShift)
+function start(gpioOffset)
 {
 	console.log('UPS power control enabled.');
-	const powerOffPin = new Gpio(27 + gpioShift, 'in', 'rising', { debounceTimeout: 10 });
-	const powerStatusPin = new Gpio(22 + gpioShift, 'out');
+	const powerOffPin = new Gpio(27 + gpioOffset, 'in', 'rising', { debounceTimeout: 10 });
+	const powerStatusPin = new Gpio(22 + gpioOffset, 'out');
 	powerStatusPin.writeSync(0);
 
 	let isWaitingPowerOffSignal = true;
