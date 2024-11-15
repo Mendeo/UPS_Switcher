@@ -1,3 +1,6 @@
+set POWER_OFF_COMMAND poweroff
+set POWER_OFF_ARGS {}
+
 set serialport [open [lindex $argv 0] r+]
 fconfigure $serialport -blocking 0 -buffering none -mode 9600,n,8,1 -translation binary -eofchar {}
 fileevent $serialport readable onSerialInput
@@ -13,8 +16,10 @@ proc onSerialInput {} {
 	global serialport
 	set chunk [read $serialport]
 	if { [string match *-* $chunk]} {
-		catch {exec poweroff} result
-		puts $result
+		close $serialport
+		catch {exec $POWER_OFF_COMMAND {*}$POWER_OFF_ARGS} powerOffResult
+		puts $powerOffResult
+		flush stdout
 		global exitProgram
 		set exitProgram 1
 	} elseif {[string match *a* $chunk]} {
