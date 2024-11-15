@@ -52,9 +52,13 @@ proc onPowerOffSignalIsAlreadyLong {} {
 	global powerStatusStream
 	global powerOffPinChangeStream
 	catch {exec kill --signal SIGTERM [pid $powerStatusStream]} killResult
-	puts $killResult
+	if {[string length $killResult > 0]} {
+		puts $killResult
+	}
 	catch {exec kill --signal SIGTERM [pid $powerOffPinChangeStream]} killResult
-	puts $killResult
+	if {[string length $killResult > 0]} {
+		puts $killResult
+	}
 	close $powerStatusStream
 	close $powerOffPinChangeStream
 	global POWER_OFF_COMMAND
