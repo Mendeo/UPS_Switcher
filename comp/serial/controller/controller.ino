@@ -11,20 +11,21 @@
 #define BLINK_ERROR_TIME 600000
 
 unsigned long _timer;
-bool _compIsOn = true;
+bool _receivePowerOffSignal = false;
+
+/*
+  Сигналы COMP_POWER_OFF_COMMAND и COMP_STATUS инверсные
+*/
 
 void setup()
 {
-  pinMode(COMP_POWER_OFF_COMMAND, INPUT);
+  pinMode(COMP_POWER_OFF_COMMAND, INPUT_PULLUP);
   pinMode(COMP_STATUS, OUTPUT);
   pinMode(LED, OUTPUT);
   Serial.begin(9600);
   digitalWrite(COMP_STATUS, LOW);
 
-  if (digitalRead(COMP_POWER_OFF_COMMAND))
-  {
-    blink(COMP_OFF_COMMAND_AFTER_START_ERROR);
-  }
+  if (!digitalRead(COMP_POWER_OFF_COMMAND)) blink(COMP_OFF_COMMAND_AFTER_START_ERROR);
 
   unsigned long timerForSend = millis();
   unsigned long timerForWait = millis();
@@ -39,7 +40,7 @@ void setup()
     {
       if (Serial.read() == '+')
       {
-        digitalWrite(COMP_STATUS, HIGH);
+        digitalWrite(COMP_STATUS, LOW);
         _timer = millis();
         break;
       }
@@ -55,13 +56,10 @@ void loop()
 {
   if (millis() - _timer > SEND_PERIOD)
   {
-    if (!_compIsOn) Serial.print('-');
+    if (_receivePowerOffSignal) Serial.print('-');
     if (Serial.available())
     {
-      if (Serial.read() != '+')
-      {
-        ifCompDead();
-      }
+      if (Serial.read() != '+') ifCompDead();
     }
     else
     {
@@ -69,19 +67,23 @@ void loop()
     }
     _timer = millis();
   }
-  if (digitalRead(COMP_POWER_OFF_COMMAND)) _compIsOn = false;
+  if (!digitalRead(COMP_POWER_OFF_COMMAND))
+  {
+    delay(500);
+    if (!digitalRead(COMP_POWER_OFF_COMMAND)) _receivePowerOffSignal = true;
+  }
 }
 
 void ifCompDead()
 {
-  digitalWrite(COMP_STATUS, LOW);
-  if (_compIsOn)
+  pinMode(COMP_STATUS, INPUT_PULLUP);
+  if (_receivePowerOffSignal)
   {
-    blink(COMP_DEAD_ERROR);
+    sleep();
   }
   else
   {
-    sleep();
+    blink(COMP_DEAD_ERROR);
   }
 }
 

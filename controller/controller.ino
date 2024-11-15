@@ -34,6 +34,10 @@ bool _lineIsOk = true;
 bool _needSleep = false;
 volatile bool _needCheckLine = true;
 
+/*
+  Сигналы COMP_POWER_OFF_COMMAND и COMP_STATUS инверсные
+*/
+
 void setup()
 {
   pinMode(LINE_STATUS, INPUT);
