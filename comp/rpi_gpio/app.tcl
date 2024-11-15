@@ -56,6 +56,7 @@ set powerStatusStream [write $POWER_STATUS_PIN 0]
 set powerOffPinChangeStream [watch onPowerOffPinChange $POWER_OFF_PIN]
 
 proc onPowerOffSignalIsAlreadyLong {} {
+	puts {Receive poweoff signal}
 	global powerStatusStream
 	global powerOffPinChangeStream
 	catch {exec kill --signal SIGTERM [pid $powerStatusStream]} killResult
