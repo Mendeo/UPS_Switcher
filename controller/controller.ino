@@ -34,10 +34,6 @@ bool _lineIsOk = true;
 bool _needSleep = false;
 volatile bool _needCheckLine = true;
 
-/*
-  Сигналы COMP_POWER_OFF_COMMAND и COMP_STATUS инверсные
-*/
-
 void setup()
 {
   pinMode(LINE_STATUS, INPUT);
@@ -126,12 +122,12 @@ void loop()
 
 void compPowerOff()
 {
-  digitalWrite(COMP_POWER_OFF_COMMAND, LOW);
+  digitalWrite(COMP_POWER_OFF_COMMAND, HIGH);
 }
 
 void compPowerOn()
 {
-  digitalWrite(COMP_POWER_OFF_COMMAND, HIGH);
+  digitalWrite(COMP_POWER_OFF_COMMAND, LOW);
 }
 
 void rotateServo(int angle)
