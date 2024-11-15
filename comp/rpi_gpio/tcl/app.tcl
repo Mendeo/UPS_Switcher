@@ -1,7 +1,7 @@
 set POWER_OFF_PIN 27
 set POWER_STATUS_PIN 22
 set BOUNCE_TIME 500
-set POWER_OFF_COMMAND poweroff1
+set POWER_OFF_COMMAND poweroff
 
 if {[catch {exec node -v}] || [catch {exec node -v}]} {
 	puts {"gpiod" utilities not found}
@@ -9,13 +9,13 @@ if {[catch {exec node -v}] || [catch {exec node -v}]} {
 }
 
 proc write {pin value} {
-	set progStream [open [list | node stub.js gpioset -m signal 0 $pin=$value]]
+	set progStream [open [list | gpioset -m signal 0 $pin=$value]]
 	fconfigure $progStream -blocking 0 -buffering none -translation lf -eofchar {}
 	return $progStream
 }
 
 proc watch {handler pin} {
-	set progStream [open [list | node stub.js gpiomon $pin]]
+	set progStream [open [list | gpiomon $pin]]
 	fconfigure $progStream -blocking 0 -buffering none -translation lf -eofchar {}
 	fileevent $progStream readable [list $handler $progStream]
 	return $progStream
