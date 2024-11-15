@@ -29,7 +29,7 @@ if (Gpio.accessible)
 }
 else
 {
-	console.log('System dose not support GPIO.');
+	console.log('System doesn\'t support GPIO.');
 }
 
 function start(gpioOffset)
