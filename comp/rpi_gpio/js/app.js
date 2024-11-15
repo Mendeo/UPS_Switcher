@@ -69,7 +69,7 @@ function start(gpioOffset)
 					{
 						isWaitingPowerOffSignal = true;
 					}
-				}, 10000);
+				}, 500);
 			}
 		}
 	});
