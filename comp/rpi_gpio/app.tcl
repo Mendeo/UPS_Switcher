@@ -16,20 +16,10 @@ proc write {pin value} {
 }
 
 proc watch {handler pin} {
-	set progStream [open [list | gpiomon -B pull-up $pin]]
+	set progStream [open [list | gpiomon -B pull-up -F %e 0 $pin]]
 	fconfigure $progStream -blocking 0 -buffering none -translation lf -eofchar {}
 	fileevent $progStream readable [list $handler $progStream]
 	return $progStream
-}
-
-proc checkValue {rawStr} {
-	if {[string match *FALLING* $rawStr]} {
-		return 0
-	}
-	if {[string match *RISING* $rawStr]} {
-		return 1
-	}
-	error {Unknow GPIO event}
 }
 
 set onPowerOffSignalIsAlreadyLong_Id noid
@@ -37,7 +27,7 @@ proc onPowerOffPinChange {stream} {
 	set chunk [read $stream]
 	puts -nonewline $chunk
 	flush stdout
-	set value [checkValue $chunk]
+	scan $chunk %d value
 	global onPowerOffSignalIsAlreadyLong_Id
 	global BOUNCE_TIME
 	#Сигнал инверсный
