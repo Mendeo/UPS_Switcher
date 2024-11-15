@@ -5,7 +5,7 @@ set POWER_OFF_COMMAND poweroff
 set POWER_OFF_ARGS {}
 
 if {[catch {exec gpioset -v}] || [catch {exec gpiomon -v}]} {
-	puts {"gpiod" utilities not found}
+	puts {"gpiod" utilities are not found}
 	exit 1
 }
 
@@ -16,7 +16,7 @@ proc write {pin value} {
 }
 
 proc watch {handler pin} {
-	set progStream [open [list | gpiomon -B disable -F %e 0 $pin]]
+	set progStream [open [list | gpiomon -b -B disable -F %e 0 $pin]]
 	fconfigure $progStream -blocking 0 -buffering none -translation lf -eofchar {}
 	fileevent $progStream readable [list $handler $progStream]
 	return $progStream
@@ -24,21 +24,20 @@ proc watch {handler pin} {
 
 set onPowerOffSignalIsAlreadyLong_Id noid
 proc onPowerOffPinChange {stream} {
-	set chunk [read $stream]
-	puts -nonewline $chunk
-	flush stdout
-	scan $chunk %d value
-	global onPowerOffSignalIsAlreadyLong_Id
-	global BOUNCE_TIME
-	if {$value} {
-		if {[string equal $onPowerOffSignalIsAlreadyLong_Id noid]} {
-			set onPowerOffSignalIsAlreadyLong_Id [after $BOUNCE_TIME onPowerOffSignalIsAlreadyLong]
-		}
-	} else {
-		if {![string equal $onPowerOffSignalIsAlreadyLong_Id noid]} {
-			after cancel $onPowerOffSignalIsAlreadyLong_Id
-			set onPowerOffSignalIsAlreadyLong_Id noid
-		}
+	if {[gets $stream chunk] > 0} {
+		scan $chunk %d value
+		global onPowerOffSignalIsAlreadyLong_Id
+		global BOUNCE_TIME
+		if {$value} {
+			if {[string equal $onPowerOffSignalIsAlreadyLong_Id noid]} {
+				set onPowerOffSignalIsAlreadyLong_Id [after $BOUNCE_TIME onPowerOffSignalIsAlreadyLong]
+			}
+		} else {
+			if {![string equal $onPowerOffSignalIsAlreadyLong_Id noid]} {
+				after cancel $onPowerOffSignalIsAlreadyLong_Id
+				set onPowerOffSignalIsAlreadyLong_Id noid
+			}
+		}	
 	}
 }
 
@@ -51,11 +50,11 @@ proc onPowerOffSignalIsAlreadyLong {} {
 	global powerStatusStream
 	global powerOffPinChangeStream
 	catch {exec kill --signal SIGTERM [pid $powerStatusStream]} killResult
-	if {[string length $killResult > 0]} {
+	if {[string length $killResult] > 0} {
 		puts $killResult
 	}
 	catch {exec kill --signal SIGTERM [pid $powerOffPinChangeStream]} killResult
-	if {[string length $killResult > 0]} {
+	if {[string length $killResult] > 0} {
 		puts $killResult
 	}
 	close $powerStatusStream
