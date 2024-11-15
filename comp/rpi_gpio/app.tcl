@@ -2,6 +2,7 @@ set POWER_OFF_PIN 27
 set POWER_STATUS_PIN 22
 set BOUNCE_TIME 500
 set POWER_OFF_COMMAND poweroff
+set POWER_OFF_ARGS {}
 
 if {[catch {exec gpioset -v}] || [catch {exec gpiomon -v}]} {
 	puts {"gpiod" utilities not found}
@@ -66,7 +67,8 @@ proc onPowerOffSignalIsAlreadyLong {} {
 	close $powerStatusStream
 	close $powerOffPinChangeStream
 	global POWER_OFF_COMMAND
-	catch {exec $POWER_OFF_COMMAND} powerOffResult
+	global POWER_OFF_ARGS
+	catch {exec $POWER_OFF_COMMAND {*}$POWER_OFF_ARGS} powerOffResult
 	puts $powerOffResult
 	flush stdout
 	global exitProgram
