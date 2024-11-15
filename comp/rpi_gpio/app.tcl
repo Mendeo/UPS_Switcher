@@ -3,7 +3,7 @@ set POWER_STATUS_PIN 22
 set BOUNCE_TIME 500
 set POWER_OFF_COMMAND poweroff
 
-if {[catch {exec node -v}] || [catch {exec node -v}]} {
+if {[catch {exec gpioset -v}] || [catch {exec gpiomon -v}]} {
 	puts {"gpiod" utilities not found}
 	exit 1
 }
@@ -73,4 +73,3 @@ proc onPowerOffSignalIsAlreadyLong {} {
 }
 
 vwait exitProgram
-
