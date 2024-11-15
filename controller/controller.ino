@@ -122,12 +122,12 @@ void loop()
 
 void compPowerOff()
 {
-  digitalWrite(COMP_POWER_OFF_COMMAND, HIGH);
+  digitalWrite(COMP_POWER_OFF_COMMAND, LOW);
 }
 
 void compPowerOn()
 {
-  digitalWrite(COMP_POWER_OFF_COMMAND, LOW);
+  digitalWrite(COMP_POWER_OFF_COMMAND, HIGH);
 }
 
 void rotateServo(int angle)

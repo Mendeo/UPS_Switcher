@@ -16,7 +16,7 @@ proc write {pin value} {
 }
 
 proc watch {handler pin} {
-	set progStream [open [list | gpiomon $pin]]
+	set progStream [open [list | gpiomon -B pull-up $pin]]
 	fconfigure $progStream -blocking 0 -buffering none -translation lf -eofchar {}
 	fileevent $progStream readable [list $handler $progStream]
 	return $progStream
@@ -40,7 +40,8 @@ proc onPowerOffPinChange {stream} {
 	set value [checkValue $chunk]
 	global onPowerOffSignalIsAlreadyLong_Id
 	global BOUNCE_TIME
-	if {$value} {
+	#Сигнал инверсный
+	if {!$value} {
 		if {[string equal $onPowerOffSignalIsAlreadyLong_Id noid]} {
 			set onPowerOffSignalIsAlreadyLong_Id [after $BOUNCE_TIME onPowerOffSignalIsAlreadyLong]
 		}
