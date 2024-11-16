@@ -5,18 +5,35 @@ set POWER_OFF_COMMAND poweroff
 set POWER_OFF_ARGS {}
 
 if {[catch {exec gpioset -v}] || [catch {exec gpiomon -v}]} {
-	puts {"gpiod" utilities are not found}
+	puts stderr {"gpiod" utilities are not found.}
 	exit 1
 }
 
 proc write {pin value} {
-	set progStream [open [list | gpioset -m signal 0 $pin=$value]]
+	if {[catch {open [list | gpioset -m signal 0 $pin=$value 2>@stdout] r} progStream]} {
+		puts stderr "Could not open gpio$pin: $progStream."
+		exit 2
+	}
 	fconfigure $progStream -blocking 0 -buffering none -translation lf -eofchar {}
+	fileevent $progStream readable [list writeHandler $progStream]
 	return $progStream
 }
 
+proc writeHandler {stream} {
+	set chars [gets $stream chunk]
+	if {$chars > 0 || $chars < 0} {
+		global POWER_STATUS_PIN
+		puts stderr "Could not open gpio$POWER_STATUS_PIN. $chunk"
+		prepareToExit
+		exit 3
+	}
+}
+
 proc watch {handler pin} {
-	set progStream [open [list | gpiomon -b -B disable -F %e 0 $pin]]
+	if {[catch {open [list | gpiomon -b -B disable -F %e 0 $pin 2>@stdout] r} progStream]} {
+		puts stderr "Could not open gpio$pin."
+		exit 2
+	}
 	fconfigure $progStream -blocking 0 -buffering none -translation lf -eofchar {}
 	fileevent $progStream readable [list $handler $progStream]
 	return $progStream
@@ -24,8 +41,14 @@ proc watch {handler pin} {
 
 set onPowerOffSignalIsAlreadyLong_Id noid
 proc onPowerOffPinChange {stream} {
-	if {[gets $stream chunk] > 0} {
-		scan $chunk %d value
+	set chars [gets $stream chunk]
+	if {$chars > 0} {
+		if {[scan $chunk %d value] == 0} {
+			global POWER_OFF_PIN
+			puts stderr "Could not open gpio$POWER_OFF_PIN: $chunk"
+			prepareToExit
+			exit 3
+		}
 		global onPowerOffSignalIsAlreadyLong_Id
 		global BOUNCE_TIME
 		if {$value} {
@@ -37,28 +60,35 @@ proc onPowerOffPinChange {stream} {
 				after cancel $onPowerOffSignalIsAlreadyLong_Id
 				set onPowerOffSignalIsAlreadyLong_Id noid
 			}
-		}	
+		}
+	} elseif {$chars < 0} {
+		global POWER_OFF_PIN
+		puts stderr "Could not open gpio$POWER_OFF_PIN"
+		prepareToExit
+		exit 3
 	}
 }
 
-puts {UPS power control enabled.}
 set powerStatusStream [write $POWER_STATUS_PIN 0]
 set powerOffPinChangeStream [watch onPowerOffPinChange $POWER_OFF_PIN]
+puts {UPS power control enabled.}
 
-proc onPowerOffSignalIsAlreadyLong {} {
-	puts {Receive poweoff signal}
+proc prepareToExit {} {
 	global powerStatusStream
 	global powerOffPinChangeStream
 	catch {exec kill --signal SIGTERM [pid $powerStatusStream]} killResult
-	if {[string length $killResult] > 0} {
-		puts $killResult
-	}
+	puts -nonewline $killResult
 	catch {exec kill --signal SIGTERM [pid $powerOffPinChangeStream]} killResult
-	if {[string length $killResult] > 0} {
-		puts $killResult
-	}
-	close $powerStatusStream
-	close $powerOffPinChangeStream
+	puts -nonewline $killResult
+	catch {close $powerStatusStream} errorMessage
+	puts -nonewline $errorMessage
+	catch {close $powerOffPinChangeStream} errorMessage
+	puts -nonewline $errorMessage
+}
+
+proc onPowerOffSignalIsAlreadyLong {} {
+	puts {Receive poweoff signal}
+	prepareToExit
 	global POWER_OFF_COMMAND
 	global POWER_OFF_ARGS
 	catch {exec $POWER_OFF_COMMAND {*}$POWER_OFF_ARGS} powerOffResult
