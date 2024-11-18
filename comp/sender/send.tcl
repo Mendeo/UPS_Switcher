@@ -1,19 +1,21 @@
 #!/usr/bin/tclsh
-#puts [file dirname [file normalize [info script]]]
 package require http
 package require tls
 
-after 0 start
-proc start {} {
+after 0 {
 	array set cred [getCredentials]
 	puts $cred(chat_id)
 
 	http::register https 443 ::tls::socket
 	set token [http::geturl https://mendeo.ru]
 	puts $token
+	upvar 0 $token qq
+	foreach {key value} [array get qq] {
+		puts "$key: $value"
+	}
 	http::cleanup $token
 	exitNormal
-}
+} {}
 
 proc getCredentials {} {
 	set credStream [open credentials.txt r]
