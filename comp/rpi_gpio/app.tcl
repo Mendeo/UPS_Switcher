@@ -1,3 +1,4 @@
+#!/usr/bin/tclsh
 set POWER_OFF_PIN 27
 set POWER_STATUS_PIN 22
 set BOUNCE_TIME 500
