@@ -2,4 +2,4 @@ node_modules/
 bin/
 obj/
 test*
-credentials*
+credentials.txt
