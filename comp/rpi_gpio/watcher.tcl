@@ -1,6 +1,11 @@
 #!/usr/bin/tclsh
 
-package require telegram_sender
+#Если сообщения в телеграм посылать не нужно, то нужно закоментировать следующие строки.
+source ../telegram_sender/sender.tcl
+set POWEROFF_MESSAGE {Receive poweroff command.}
+set POWERON_MESSAGE {Server is online.}
+set TELEGRAM_CREDENTIALS {../telegram_sender/credentials.txt}
+#######################################################################################
 
 set POWER_OFF_PIN 27
 set POWER_STATUS_PIN 22
@@ -76,6 +81,11 @@ proc onPowerOffPinChange {stream} {
 set powerStatusStream [write $POWER_STATUS_PIN 0]
 set powerOffPinChangeStream [watch onPowerOffPinChange $POWER_OFF_PIN]
 puts {UPS power control enabled.}
+if {[info exists POWERON_MESSAGE]} {
+	SendMessageToTelegram $POWERON_MESSAGE $TELEGRAM_CREDENTIALS
+	vwait telegram_sender_waiter
+	puts [lindex $telegram_sender_waiter 0]
+}
 
 proc prepareToExit {} {
 	global powerStatusStream
@@ -95,6 +105,13 @@ proc onPowerOffSignalIsAlreadyLong {} {
 	prepareToExit
 	global POWER_OFF_COMMAND
 	global POWER_OFF_ARGS
+	if {[info exists POWEROFF_MESSAGE]} {
+		global POWEROFF_MESSAGE
+		global TELEGRAM_CREDENTIALS
+		SendMessageToTelegram $POWEROFF_MESSAGE $TELEGRAM_CREDENTIALS
+		vwait telegram_sender_waiter
+		puts [lindex $telegram_sender_waiter 0]
+	}
 	catch {exec $POWER_OFF_COMMAND {*}$POWER_OFF_ARGS} powerOffResult
 	puts $powerOffResult
 	flush stdout

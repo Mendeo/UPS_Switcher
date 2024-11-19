@@ -1,36 +1,42 @@
 #!/usr/bin/tclsh
-#package provide telegram_sender 1.0
 package require http
 package require tls
 
 http::register https 443 ::tls::socket
 http::config -useragent {Tcl telegram bot sender}
 
-# after 0 {SendMessageToTelegram $MESSAGE}
-
 proc SendMessageToTelegram {message pathToCredentials} {
 	array set cred [getCredentials $pathToCredentials]
-	#set url "https://api.telegram.org/bot$cred(bot_token)/sendMessage"
-	set url {http://127.0.0.1}
+	set url "https://api.telegram.org/bot$cred(bot_token)/sendMessage"
+	#set url {http://127.0.0.1}
 	set body "{\"text\": \"$message\", \"chat_id\": \"$cred(chat_id)\"}"
 	set contentType application/json
 	post $url $body $contentType onTelegramServerRespond
 }
 
 proc onTelegramServerRespond {body} {
-	if {![hasOkInRespond $body]} {
+	if {[hasOkInRespond $body]} {
 		global telegram_sender_waiter
-		set telegram_sender_waiter [list {The server reported an error while sending a message to Telegram.} 4]
+		set telegram_sender_waiter [list {Message successfully sent to telegram.} 0]
+	} else {
+		global telegram_sender_waiter
+		set telegram_sender_waiter [list {The server reported an error while sending a message to Telegram.} 5]
 	}
 }
 
 proc hasOkInRespond {body} {
 	set isOk false
+	set body [string trim $body]
+	if {![string equal [string index $body 0] "\{"]} {
+		return false
+	}
+	#Убираем корневые фигурные скобки
+	set body [string range $body 1 end-1]
 	foreach el [split $body ,] {
 		set keyValue [split $el :]
-		set key [lindex $keyValue 0]
+		set key [string trim [lindex $keyValue 0]]
 		if {[string equal $key \"ok\"]} {
-			set value [lindex $keyValue 1]
+			set value [string trim [lindex $keyValue 1]]
 			if {[string equal $value true] || [string equal $value \"true\"]} {
 				set isOk true
 			} else {
@@ -46,6 +52,7 @@ proc post {url body contenType callback} {
 	if {[string first ::http:: $errorOrToken] == -1} {
 		global telegram_sender_waiter
 		set telegram_sender_waiter [list $errorOrToken 1]
+		return
 	}
 	after 5000 {
 		if {[info exist errorOrToken]} {
@@ -57,15 +64,20 @@ proc post {url body contenType callback} {
 
 	proc onAnswer {callback token} {
 		upvar #0 $token res
+		# foreach {key value} [array get res] {
+		# 	puts "$key: $value"
+		# }
 		if {[string match *200* $res(http)]} {
-			uplevel #0 $callback $res(body)
+			$callback $res(body)
+		} elseif {[string length $res(http)] > 0} {
+			global telegram_sender_waiter
+			set telegram_sender_waiter [list "The telegram server respond with error: $res(http)" 4]
 		} else {
 			global telegram_sender_waiter
-			set telegram_sender_waiter [list "Server respond with error: $res(http)" 3]
+			set telegram_sender_waiter [list "The telegram server connection error: [lindex $res(error) 0]" 4]
 		}
 		http::cleanup $token
-		global telegram_sender_waiter
-		set telegram_sender_waiter [list {Message successfully sent to telegram.} 0]
+		return
 	}
 }
 
