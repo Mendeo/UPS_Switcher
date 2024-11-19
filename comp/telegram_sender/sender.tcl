@@ -6,14 +6,10 @@ package require tls
 http::register https 443 ::tls::socket
 http::config -useragent {Tcl telegram bot sender}
 
-set MESSAGE qwqw
-#[lindex $argv 0]
-puts "Message: $MESSAGE"
+# after 0 {SendMessageToTelegram $MESSAGE}
 
-after 0 {SendMessageToTelegram $MESSAGE}
-
-proc SendMessageToTelegram {message} {
-	array set cred [getCredentials]
+proc SendMessageToTelegram {message pathToCredentials} {
+	array set cred [getCredentials $pathToCredentials]
 	#set url "https://api.telegram.org/bot$cred(bot_token)/sendMessage"
 	set url {http://127.0.0.1}
 	set body "{\"text\": \"$message\", \"chat_id\": \"$cred(chat_id)\"}"
@@ -22,10 +18,9 @@ proc SendMessageToTelegram {message} {
 }
 
 proc onTelegramServerRespond {body} {
-	if {[hasOkInRespond $body]} {
-		puts {Message successfully sent to telegram.}
-	} else {
-		puts stderr {The server reported an error while sending a message to Telegram.}
+	if {![hasOkInRespond $body]} {
+		global telegram_sender_waiter
+		set telegram_sender_waiter [list {The server reported an error while sending a message to Telegram.} 4]
 	}
 }
 
@@ -49,15 +44,15 @@ proc hasOkInRespond {body} {
 proc post {url body contenType callback} {
 	catch {http::geturl $url -headers [list Content-Type $contenType] -query $body -command [list onAnswer $callback]} errorOrToken
 	if {[string first ::http:: $errorOrToken] == -1} {
-		puts stderr $errorOrToken
-		exit 1
+		global telegram_sender_waiter
+		set telegram_sender_waiter [list $errorOrToken 1]
 	}
 	after 5000 {
-		puts stderr {Server is not respond}
 		if {[info exist errorOrToken]} {
 			http::reset $errorOrToken
 		}
-		exit 2
+		global telegram_sender_waiter
+		set telegram_sender_waiter [list {The telegram server is not respond} 2]
 	}
 
 	proc onAnswer {callback token} {
@@ -65,16 +60,16 @@ proc post {url body contenType callback} {
 		if {[string match *200* $res(http)]} {
 			uplevel #0 $callback $res(body)
 		} else {
-			puts stderr "Server respond with error: $res(http)"
-			exit 3
+			global telegram_sender_waiter
+			set telegram_sender_waiter [list "Server respond with error: $res(http)" 3]
 		}
 		http::cleanup $token
-		exitNormal
+		global telegram_sender_waiter
+		set telegram_sender_waiter [list {Message successfully sent to telegram.} 0]
 	}
 }
 
-proc getCredentials {} {
-	set pathToCredentials [file join [file dirname [info script]] credentials.txt]
+proc getCredentials {pathToCredentials} {
 	set credStream [open $pathToCredentials r]
 	set values {}
 	while {![eof $credStream]} {
@@ -87,10 +82,3 @@ proc getCredentials {} {
 	close $credStream
 	return $values
 }
-
-proc exitNormal {} {
-	global exitProgram
-	set exitProgram 1
-}
-
-vwait exitProgram
