@@ -1,4 +1,4 @@
-#!/usr/bin/tclsh
+#!/usr/bin/env tclsh
 
 #Если сообщения в телеграм посылать не нужно, то нужно закоментировать следующие строки.
 source ../telegram_sender/sender.tcl
