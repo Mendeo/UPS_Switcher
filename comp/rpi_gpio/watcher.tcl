@@ -1,11 +1,11 @@
 #!/usr/bin/env tclsh
 
 #Если сообщения в телеграм посылать не нужно, то нужно закоментировать следующие строки.
-set POWEROFF_MESSAGE {Receive poweroff command.}
-set POWERON_MESSAGE {Server is online.}
-set telegram_sender_dir [file normalize [file join [file dirname [info script]] ../telegram_sender]]
-source [file join $telegram_sender_dir sender.tcl]
-set TELEGRAM_CREDENTIALS [file join $telegram_sender_dir credentials.txt]
+# set POWEROFF_MESSAGE {Receive poweroff command.}
+# set POWERON_MESSAGE {Server is online.}
+# set telegram_sender_dir [file normalize [file join [file dirname [info script]] ../telegram_sender]]
+# source [file join $telegram_sender_dir sender.tcl]
+# set TELEGRAM_CREDENTIALS [file join $telegram_sender_dir credentials.txt]
 #######################################################################################
 
 set POWER_OFF_PIN 27
