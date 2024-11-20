@@ -1,13 +1,5 @@
 #!/usr/bin/env tclsh
 
-#Если сообщения в телеграм посылать не нужно, то нужно закоментировать следующие строки.
-# set POWEROFF_MESSAGE {Receive poweroff command.}
-# set POWERON_MESSAGE {Server is online.}
-# set telegram_sender_dir [file normalize [file join [file dirname [info script]] ../telegram_sender]]
-# source [file join $telegram_sender_dir sender.tcl]
-# set TELEGRAM_CREDENTIALS [file join $telegram_sender_dir credentials.txt]
-#######################################################################################
-
 set POWER_OFF_PIN 27
 set POWER_STATUS_PIN 22
 set BOUNCE_TIME 500
@@ -82,11 +74,6 @@ proc onPowerOffPinChange {stream} {
 set powerStatusStream [write $POWER_STATUS_PIN 0]
 set powerOffPinChangeStream [watch onPowerOffPinChange $POWER_OFF_PIN]
 puts {UPS power control enabled.}
-if {[info exists POWERON_MESSAGE]} {
-	SendMessageToTelegram $POWERON_MESSAGE $TELEGRAM_CREDENTIALS
-	vwait telegram_sender_waiter
-	puts [lindex $telegram_sender_waiter 0]
-}
 
 proc prepareToExit {} {
 	global powerStatusStream
@@ -104,14 +91,6 @@ proc prepareToExit {} {
 proc onPowerOffSignalIsAlreadyLong {} {
 	puts {Receive poweoff signal}
 	prepareToExit
-	global POWEROFF_MESSAGE
-	if {[info exists POWEROFF_MESSAGE]} {
-		global TELEGRAM_CREDENTIALS
-		SendMessageToTelegram $POWEROFF_MESSAGE $TELEGRAM_CREDENTIALS
-		global telegram_sender_waiter
-		vwait telegram_sender_waiter
-		puts [lindex $telegram_sender_waiter 0]
-	}
 	global POWER_OFF_COMMAND
 	global POWER_OFF_ARGS
 	catch {exec $POWER_OFF_COMMAND {*}$POWER_OFF_ARGS} powerOffResult
