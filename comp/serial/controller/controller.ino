@@ -1,8 +1,8 @@
 #include <LowPower.h>
 
 #define LED 13
-#define COMP_POWER_OFF_COMMAND 7
-#define COMP_STATUS 8
+#define COMP_POWER_OFF_COMMAND 2
+#define COMP_STATUS 3
 #define SEND_PERIOD 700
 #define WAIT_COMP_PERIOD 120000
 #define WAIT_COMP_ERROR 1000
@@ -12,20 +12,22 @@
 
 unsigned long _timer;
 bool _receivePowerOffSignal = false;
+volatile bool _resetTimer = true;
+bool _needSleep = false;
 
 /*
-  Сигналы COMP_POWER_OFF_COMMAND и COMP_STATUS инверсные
+  Сигнал COMP_STATUS инверсный
 */
 
 void setup()
 {
-  pinMode(COMP_POWER_OFF_COMMAND, INPUT_PULLUP);
+  pinMode(COMP_POWER_OFF_COMMAND, INPUT);
   pinMode(COMP_STATUS, OUTPUT);
   pinMode(LED, OUTPUT);
   Serial.begin(9600);
-  digitalWrite(COMP_STATUS, LOW);
+  digitalWrite(COMP_STATUS, HIGH);
 
-  if (!digitalRead(COMP_POWER_OFF_COMMAND)) blink(COMP_OFF_COMMAND_AFTER_START_ERROR);
+  if (digitalRead(COMP_POWER_OFF_COMMAND)) blink(COMP_OFF_COMMAND_AFTER_START_ERROR);
 
   unsigned long timerForSend = millis();
   unsigned long timerForWait = millis();
@@ -50,40 +52,44 @@ void setup()
       blink(WAIT_COMP_ERROR);
     }
   }
+  _timer = millis();
+}
+
+void onCompPowerOffCommand()
+{
+  detachInterrupt(digitalPinToInterrupt(COMP_POWER_OFF_COMMAND));
+  _resetTimer = true;
 }
 
 void loop()
 {
-  if (millis() - _timer > SEND_PERIOD)
+  if (_receivePowerOffSignal && millis() - _timer > SEND_PERIOD)
   {
-    if (_receivePowerOffSignal) Serial.print('-');
-    if (Serial.available())
+    Serial.print('-');
+    _resetTimer = true;
+  }
+  if (!_receivePowerOffSignal)
+  {
+    if (digitalRead(COMP_POWER_OFF_COMMAND))
     {
-      if (Serial.read() != '+') ifCompDead();
+      if ((millis() - _timer) >= 100) _receivePowerOffSignal = true;
     }
     else
     {
-      ifCompDead();
-    }
-    _timer = millis();
-  }
-  if (!digitalRead(COMP_POWER_OFF_COMMAND))
-  {
-    delay(500);
-    if (!digitalRead(COMP_POWER_OFF_COMMAND)) _receivePowerOffSignal = true;
-  }
-}
+      attachInterrupt(digitalPinToInterrupt(COMP_POWER_OFF_COMMAND), onCompPowerOffCommand, HIGH);
+      _needSleep = true;
 
-void ifCompDead()
-{
-  pinMode(COMP_STATUS, INPUT_PULLUP);
-  if (_receivePowerOffSignal)
-  {
-    sleep();
+    }
   }
-  else
+  if (_resetTimer)
   {
-    blink(COMP_DEAD_ERROR);
+    _timer = millis();
+    _resetTimer = false;
+  }
+  if (_needSleep)
+  {
+    _needSleep = false;
+    sleep();
   }
 }
 
@@ -98,22 +104,12 @@ void blink(int period)
   digitalWrite(LED, HIGH);
   delay(period);
   unsigned long timer = millis();
-  if (period > 0)
+  while (true)
   {
-    while (true)
-    {
-      digitalWrite(LED, LOW);
-      delay(period);
-      digitalWrite(LED, HIGH);
-      delay(period);
-      if (millis() - timer >= BLINK_ERROR_TIME) sleep();
-    }
-  }
-  else
-  {
-    while (true)
-    {
-      if (millis() - timer >= BLINK_ERROR_TIME) sleep();
-    }
+    digitalWrite(LED, LOW);
+    delay(period);
+    digitalWrite(LED, HIGH);
+    delay(period);
+    if (millis() - timer >= BLINK_ERROR_TIME) sleep();
   }
 }

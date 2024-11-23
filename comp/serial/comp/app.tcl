@@ -8,7 +8,6 @@ fileevent $serialport readable onSerialInput
 proc sendAlive {} {
 	global serialport
 	puts -nonewline $serialport "+"
-	after 500 sendAlive
 }
 
 set needSendAliveOn true
