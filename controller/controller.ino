@@ -188,13 +188,13 @@ void waitForCompPowerOff()
 {
   while (!digitalRead(COMP_STATUS)) {}
   compPowerOn();
-   _compIsOn = false;
+  _compIsOn = false;
 }
 
 void waitForCompPowerOn()
 {
   while (digitalRead(COMP_STATUS)) {}
-   _compIsOn = true;
+  _compIsOn = true;
 }
 
 void attachInterruptToLineDown()
@@ -235,23 +235,13 @@ void blink(int period)
   digitalWrite(LED, HIGH);
   delay(period);
   unsigned long timer = millis();
-  if (period > 0)
+  while (true)
   {
-    while (true)
-    {
-      digitalWrite(LED, LOW);
-      delay(period);
-      digitalWrite(LED, HIGH);
-      delay(period);
-      if (millis() - timer >= BLINK_ERROR_TIME) sleep();
-    }
-  }
-  else
-  {
-    while (true)
-    {
-      if (millis() - timer >= BLINK_ERROR_TIME) sleep();
-    }
+    digitalWrite(LED, LOW);
+    delay(period);
+    digitalWrite(LED, HIGH);
+    delay(period);
+    if (millis() - timer >= BLINK_ERROR_TIME) sleep();
   }
 }
 
