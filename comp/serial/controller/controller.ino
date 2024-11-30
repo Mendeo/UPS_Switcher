@@ -11,8 +11,10 @@
 
 unsigned long _timer;
 bool _receivePowerOffSignal = false;
-volatile bool _resetTimer = true;
 bool _needSleep = false;
+bool _afterHighEvent = false;
+bool _afterLowEvent = true;
+volatile bool _ifInterruptIsAttached = false;
 
 /*
   Сигнал COMP_STATUS инверсный
@@ -56,39 +58,51 @@ void setup()
 
 void onCompPowerOffCommand()
 {
-  detachInterrupt(digitalPinToInterrupt(COMP_POWER_OFF_COMMAND));
-  _resetTimer = true;
+
 }
 
 void loop()
 {
-  if (_receivePowerOffSignal && millis() - _timer > SEND_PERIOD)
+  if (_ifInterruptIsAttached) detachInterrupt(digitalPinToInterrupt(COMP_POWER_OFF_COMMAND));
+  if (_receivePowerOffSignal)
   {
-    Serial.print('-');
-    _resetTimer = true;
+    if (millis() - _timer >= SEND_PERIOD)
+    {
+      Serial.print('-');
+      _timer = millis();
+    }
   }
-  if (!_receivePowerOffSignal)
+  else
   {
     if (digitalRead(COMP_POWER_OFF_COMMAND))
     {
-      if ((millis() - _timer) >= 100) _receivePowerOffSignal = true;
+      if (_afterLowEvent)
+      {
+        _afterLowEvent = false;
+        _afterHighEvent = true;
+        _timer = millis();
+      }
+      if ((millis() - _timer) >= 100)
+      {
+        _receivePowerOffSignal = true;
+        _timer = millis() + SEND_PERIOD;
+      }
     }
     else
     {
-      attachInterrupt(digitalPinToInterrupt(COMP_POWER_OFF_COMMAND), onCompPowerOffCommand, HIGH);
-      _needSleep = true;
-
+      if (_afterHighEvent)
+      {
+        _afterHighEvent = false;
+        _afterLowEvent = true;
+        _timer = millis();
+      }
+      if (!_ifInterruptIsAttached && (millis() - _timer) >= 100)
+      {
+        attachInterrupt(digitalPinToInterrupt(COMP_POWER_OFF_COMMAND), onCompPowerOffCommand, HIGH);
+        _ifInterruptIsAttached = true;
+        sleep();
+      }
     }
-  }
-  if (_resetTimer)
-  {
-    _timer = millis();
-    _resetTimer = false;
-  }
-  if (_needSleep)
-  {
-    _needSleep = false;
-    sleep();
   }
 }
 
