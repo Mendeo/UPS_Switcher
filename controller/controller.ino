@@ -59,18 +59,9 @@ void setup()
   if (digitalRead(COMP_STATUS)) blink(COMP_NOT_READY_1_ERROR);
 }
 
-void onLineDown()
+void onLineChange()
 {
-  detachInterrupt(digitalPinToInterrupt(LINE_STATUS));
   _needCheckLine = true;
-  digitalWrite(LED, HIGH);
-}
-
-void onLineUp()
-{
-  detachInterrupt(digitalPinToInterrupt(LINE_STATUS));
-  _needCheckLine = true;
-  digitalWrite(LED, HIGH);
 }
 
 void loop()
@@ -199,11 +190,11 @@ void waitForCompPowerOn()
 
 void attachInterruptToLineDown()
 {
-  attachInterrupt(digitalPinToInterrupt(LINE_STATUS), onLineDown, HIGH);
+  attachInterrupt(digitalPinToInterrupt(LINE_STATUS), onLineChange, HIGH);
 }
 void attachInterruptToLineUp()
 {
-  attachInterrupt(digitalPinToInterrupt(LINE_STATUS), onLineUp, LOW);
+  attachInterrupt(digitalPinToInterrupt(LINE_STATUS), onLineChange, LOW);
 }
 
 void checkLine()
@@ -211,7 +202,9 @@ void checkLine()
   if (_needCheckLine)
   {
     _needCheckLine = false;
+    detachInterrupt(digitalPinToInterrupt(LINE_STATUS));
     delay(50);
+    digitalWrite(LED, HIGH);
     bool currentValue = !digitalRead(LINE_STATUS);
     if (currentValue != _lineIsOk)
     {
