@@ -36,7 +36,7 @@ void setup()
   {
     if (millis() - timerForSend >= SEND_PERIOD)
     {
-      Serial.print('a');
+      Serial.println('a');
       timerForSend = millis();
     }
     if (Serial.available())
@@ -68,7 +68,7 @@ void loop()
   {
     if (millis() - _timer >= SEND_PERIOD)
     {
-      Serial.print('-');
+      Serial.println('-');
       _timer = millis();
     }
   }
