@@ -3700,17 +3700,7 @@
 	)
 	(wire
 		(pts
-			(xy 50.8 157.48) (xy 50.8 162.56)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "093cbe33-c59d-4ee8-8295-23f86ae11f93")
-	)
-	(wire
-		(pts
-			(xy 80.01 160.02) (xy 80.01 170.18)
+			(xy 80.01 160.02) (xy 80.01 167.64)
 		)
 		(stroke
 			(width 0)
@@ -3740,7 +3730,7 @@
 	)
 	(wire
 		(pts
-			(xy 29.21 165.1) (xy 29.21 171.45)
+			(xy 29.21 165.1) (xy 29.21 167.64)
 		)
 		(stroke
 			(width 0)
@@ -3970,7 +3960,7 @@
 	)
 	(wire
 		(pts
-			(xy 124.46 143.51) (xy 124.46 171.45)
+			(xy 124.46 143.51) (xy 124.46 168.91)
 		)
 		(stroke
 			(width 0)
@@ -4310,7 +4300,7 @@
 	)
 	(wire
 		(pts
-			(xy 124.46 171.45) (xy 132.08 171.45)
+			(xy 124.46 168.91) (xy 132.08 168.91)
 		)
 		(stroke
 			(width 0)
@@ -4380,7 +4370,7 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 20.32) (xy 173.99 30.48)
+			(xy 173.99 21.59) (xy 173.99 30.48)
 		)
 		(stroke
 			(width 0)
@@ -4417,6 +4407,26 @@
 			(type default)
 		)
 		(uuid "eaeda526-a9ac-4495-b470-15d001a0b819")
+	)
+	(wire
+		(pts
+			(xy 50.8 168.91) (xy 50.8 171.45)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ebbd5df8-1c8c-41c7-90a1-3233785eea3e")
+	)
+	(wire
+		(pts
+			(xy 50.8 157.48) (xy 50.8 161.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f521f2a0-23b4-46f0-bb33-b9d4c0d07c2d")
 	)
 	(wire
 		(pts
@@ -4504,7 +4514,7 @@
 	)
 	(global_label "COMP_STAT"
 		(shape output)
-		(at 132.08 171.45 0)
+		(at 132.08 168.91 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4514,7 +4524,7 @@
 		)
 		(uuid "16f29946-f6b1-4d2b-9a28-d29e95e41345")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 145.588 171.45 0)
+			(at 145.588 168.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5610,7 +5620,7 @@
 	)
 	(symbol
 		(lib_id "power:+BATT")
-		(at 173.99 20.32 0)
+		(at 173.99 21.59 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5619,7 +5629,7 @@
 		(fields_autoplaced yes)
 		(uuid "60c22bfb-c04b-449d-a591-7c4f04f5670d")
 		(property "Reference" "#PWR04"
-			(at 173.99 24.13 0)
+			(at 173.99 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5628,7 +5638,7 @@
 			)
 		)
 		(property "Value" "+6V (BATT)"
-			(at 173.99 15.24 0)
+			(at 173.99 16.51 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5636,7 +5646,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 173.99 20.32 0)
+			(at 173.99 21.59 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5645,7 +5655,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 173.99 20.32 0)
+			(at 173.99 21.59 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5654,7 +5664,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+BATT\""
-			(at 173.99 20.32 0)
+			(at 173.99 21.59 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5764,7 +5774,7 @@
 	)
 	(symbol
 		(lib_id "power:GNDREF")
-		(at 80.01 170.18 0)
+		(at 80.01 167.64 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5773,7 +5783,7 @@
 		(fields_autoplaced yes)
 		(uuid "66970690-ea6c-4a4d-9717-92fadae07fd9")
 		(property "Reference" "#PWR08"
-			(at 80.01 176.53 0)
+			(at 80.01 173.99 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5782,7 +5792,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 80.01 175.26 0)
+			(at 80.01 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5790,7 +5800,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 80.01 170.18 0)
+			(at 80.01 167.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5799,7 +5809,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 80.01 170.18 0)
+			(at 80.01 167.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5808,7 +5818,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GNDREF\" , reference supply ground"
-			(at 80.01 170.18 0)
+			(at 80.01 167.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5823,6 +5833,76 @@
 			(project "UPS_Switcher"
 				(path "/c004cbc3-9abe-49e6-8c82-c59412dd127a"
 					(reference "#PWR08")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 50.8 165.1 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "66fef2f7-3a41-405a-8199-398efb5462d1")
+		(property "Reference" "R7"
+			(at 53.34 163.8299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1M"
+			(at 53.34 166.3699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 49.022 165.1 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 50.8 165.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 50.8 165.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c33f06fa-9d8d-4f0d-8950-bc10cd44210b")
+		)
+		(pin "2"
+			(uuid "d6cd32b8-cbb6-4449-af2a-c1533b3f693d")
+		)
+		(instances
+			(project "UPS_Switcher"
+				(path "/c004cbc3-9abe-49e6-8c82-c59412dd127a"
+					(reference "R7")
 					(unit 1)
 				)
 			)
@@ -6049,7 +6129,7 @@
 	)
 	(symbol
 		(lib_id "power:GNDREF")
-		(at 29.21 171.45 0)
+		(at 29.21 167.64 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6058,7 +6138,7 @@
 		(fields_autoplaced yes)
 		(uuid "a8dce9c2-e1a6-4d79-9a33-5c8516a37898")
 		(property "Reference" "#PWR03"
-			(at 29.21 177.8 0)
+			(at 29.21 173.99 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6067,7 +6147,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 29.21 176.53 0)
+			(at 29.21 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6075,7 +6155,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 29.21 171.45 0)
+			(at 29.21 167.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6084,7 +6164,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 29.21 171.45 0)
+			(at 29.21 167.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6093,7 +6173,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GNDREF\" , reference supply ground"
-			(at 29.21 171.45 0)
+			(at 29.21 167.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6544,7 +6624,7 @@
 	)
 	(symbol
 		(lib_id "power:NEUT")
-		(at 50.8 162.56 180)
+		(at 50.8 171.45 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6553,7 +6633,7 @@
 		(fields_autoplaced yes)
 		(uuid "d6d50a6f-ad0a-4e55-b043-52fa899896a6")
 		(property "Reference" "#PWR06"
-			(at 50.8 158.75 0)
+			(at 50.8 167.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6562,7 +6642,7 @@
 			)
 		)
 		(property "Value" "N"
-			(at 50.8 167.64 0)
+			(at 50.8 176.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6570,7 +6650,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 50.8 162.56 0)
+			(at 50.8 171.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6579,7 +6659,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 50.8 162.56 0)
+			(at 50.8 171.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6588,7 +6668,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"NEUT\""
-			(at 50.8 162.56 0)
+			(at 50.8 171.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
