@@ -1,6 +1,10 @@
 #include <LowPower.h>
 #include <Servo.h>
 
+/*
+  Сигнал COMP_STATUS инверсный
+*/
+
 #define INTERNAL_REF_REAL_VOLTAGE 1.1
 #define SERVO_ANGLE 33
 #define SERVO_PUSH_TIME 400 //Время на нажатие, зависит от угла.
@@ -14,13 +18,14 @@
 #define COMP_STATUS 6
 #define MAIN_POWER_STATUS 3
 
-#define COMP_NOT_READY_1_ERROR 500
+#define COMP_NOT_READY_ERROR 500
 #define LOW_BATTERY_ERROR 5000
 #define SWITCHING_POWER_ERROR 1000
 #define LINE_IS_DOWN_ERROR 100
 
+#define WAIT_COMP_AFTER_START_TIME 180000
 #define TIME_FOR_COMP_POWEROFF_AFTER_LINE_DOWN 30000
-#define TIME_FOR_UPS_POWEROFF_AFTER_COMP 40000
+#define TIME_FOR_UPS_POWEROFF_AFTER_COMP 43000
 #define TIME_BEFORE_COMP_POWERON 20000
 #define TIME_BEFORE_DEEP_SLEEP 10000
 
@@ -56,7 +61,15 @@ void setup()
   delay(3000); //На зарядку конденсатора перед первой проверкой линии
   checkLine();
   if (!_lineIsOk) blink(LINE_IS_DOWN_ERROR);
-  if (digitalRead(COMP_STATUS)) blink(COMP_NOT_READY_1_ERROR);
+
+  unsigned long timer = millis();
+  while (digitalRead(COMP_STATUS))
+  {
+    if (millis() - timer >= WAIT_COMP_AFTER_START_TIME)
+    {
+      blink(COMP_NOT_READY_ERROR);
+    }
+  }
 }
 
 void onLineChange()

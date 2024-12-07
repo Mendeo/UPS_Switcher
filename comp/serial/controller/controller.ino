@@ -4,7 +4,7 @@
 #define COMP_POWER_OFF_COMMAND 2
 #define COMP_STATUS 3
 #define SEND_PERIOD 700
-#define WAIT_COMP_PERIOD 120000
+#define WAIT_COMP_AFTER_START_TIME 180000
 #define WAIT_COMP_ERROR 1000
 #define COMP_OFF_COMMAND_AFTER_START_ERROR 500
 #define BLINK_ERROR_TIME 600000
@@ -48,7 +48,7 @@ void setup()
         break;
       }
     }
-    if (millis() - timerForWait >= WAIT_COMP_PERIOD)
+    if (millis() - timerForWait >= WAIT_COMP_AFTER_START_TIME)
     {
       blink(WAIT_COMP_ERROR);
     }
