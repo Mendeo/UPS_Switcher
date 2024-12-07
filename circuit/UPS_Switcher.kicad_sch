@@ -3563,6 +3563,12 @@
 		(uuid "9d37290f-48f0-4830-9fa6-782b420af92a")
 	)
 	(junction
+		(at 160.02 48.26)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b285fec6-6839-4450-a3f9-f97a7b9996eb")
+	)
+	(junction
 		(at 114.3 76.2)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3660,6 +3666,16 @@
 	)
 	(wire
 		(pts
+			(xy 160.02 48.26) (xy 160.02 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "01cf3eb8-09f6-4e01-b8ba-bf1c0e60ba72")
+	)
+	(wire
+		(pts
 			(xy 168.91 55.88) (xy 167.64 55.88)
 		)
 		(stroke
@@ -3750,7 +3766,7 @@
 	)
 	(wire
 		(pts
-			(xy 160.02 38.1) (xy 160.02 50.8)
+			(xy 160.02 38.1) (xy 160.02 48.26)
 		)
 		(stroke
 			(width 0)
@@ -3847,6 +3863,16 @@
 			(type default)
 		)
 		(uuid "30526c9f-7ed9-42b5-9daa-a3a60e5731bc")
+	)
+	(wire
+		(pts
+			(xy 173.99 30.48) (xy 173.99 35.56)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "30bb5a90-7da8-4fcf-ab71-ad94a62f2038")
 	)
 	(wire
 		(pts
@@ -4340,6 +4366,16 @@
 	)
 	(wire
 		(pts
+			(xy 173.99 48.26) (xy 160.02 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cc19174a-14e9-47d5-b093-ed4ba469eb32")
+	)
+	(wire
+		(pts
 			(xy 114.3 76.2) (xy 114.3 81.28)
 		)
 		(stroke
@@ -4387,6 +4423,16 @@
 			(type default)
 		)
 		(uuid "dae41c83-2e0b-460c-8c2f-f81476a164eb")
+	)
+	(wire
+		(pts
+			(xy 173.99 43.18) (xy 173.99 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e5b042f6-775e-49ad-a79f-41b24b2cab86")
 	)
 	(wire
 		(pts
@@ -4979,6 +5025,76 @@
 			(project ""
 				(path "/c004cbc3-9abe-49e6-8c82-c59412dd127a"
 					(reference "Q1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 173.99 39.37 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "26e1b723-4ac0-4065-86ea-9f0bce6f7194")
+		(property "Reference" "C4"
+			(at 177.8 38.0999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10u"
+			(at 177.8 40.6399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 174.9552 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 173.99 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 173.99 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ffb089bd-85b9-41da-b4d3-6f5f92d9b324")
+		)
+		(pin "2"
+			(uuid "09caeba4-cb2f-4394-9046-2907867566d2")
+		)
+		(instances
+			(project "UPS_Switcher"
+				(path "/c004cbc3-9abe-49e6-8c82-c59412dd127a"
+					(reference "C4")
 					(unit 1)
 				)
 			)
