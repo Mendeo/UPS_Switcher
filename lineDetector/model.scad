@@ -14,7 +14,7 @@ wireDeltaResistor = 3;
 wireDeltaLamp = 5;
 wallTLamp = 4;
 wallTResistor = 3;
-lampCabelD = 6;
+lampCabelD = 5;
 resistorCabelD = 3;
 
 /*Отдельно для печати*/
