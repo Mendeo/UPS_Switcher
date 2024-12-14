@@ -18,14 +18,14 @@ lampCabelD = 6;
 resistorCabelD = 3;
 
 /*Отдельно для печати*/
-lampResistorPart1();
+//lampResistorPart1();
 //lampPart2();
 //lampPart3();
 //resistorPart2();
 //resistorPart3();
 
 /*Общий вид в сборе*/
-/*
+
 lampResistorPart1();
 %translate([0, 0, -lampPart2H])
 lampPart2();
@@ -38,7 +38,7 @@ resistorPart2();
 translate([0, -resistorPart1H - resistorPart2H, lampPart1H / 2])
 rotate([90, 0, 0])
 resistorPart3();
-*/
+
 
 module lampResistorPart1()
 {
