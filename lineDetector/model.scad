@@ -8,10 +8,11 @@ resistorPart3H = 15;
 lampPart1H = 17;
 lampPart2H = 25;
 lampPart3H = 25;
-wireResistorD = 1.5;
+wireResistorD = 2;
 wireLampD = 3;
-wireDeltaResistor = 3;
-wireDeltaLamp = 5;
+wireLampWithResistorD = 4;
+wireDeltaResistor = 5;
+wireDeltaLamp = 6;
 wallTLamp = 4;
 wallTResistor = 3;
 lampCabelD = 5;
@@ -19,13 +20,13 @@ resistorCabelD = 3;
 
 /*Отдельно для печати*/
 //lampResistorPart1();
-//lampPart2();
+lampPart2();
 //lampPart3();
 //resistorPart2();
 //resistorPart3();
 
 /*Общий вид в сборе*/
-
+/*
 lampResistorPart1();
 %translate([0, 0, -lampPart2H])
 lampPart2();
@@ -38,7 +39,7 @@ resistorPart2();
 translate([0, -resistorPart1H - resistorPart2H, lampPart1H / 2])
 rotate([90, 0, 0])
 resistorPart3();
-
+*/
 
 module lampResistorPart1()
 {
@@ -96,7 +97,7 @@ module lampPart2()
 			translate([wireDeltaLamp / 2, 0, 0])
 			cylinder(h = lampPart2H + 2, d = wireLampD);
 			translate([-wireDeltaLamp / 2, 0, 0])
-			cylinder(h = lampPart2H + 2, d = wireLampD);
+			cylinder(h = lampPart2H + 2, d = wireLampWithResistorD);
 		}
 	}
 }
