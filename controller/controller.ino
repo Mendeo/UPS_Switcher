@@ -160,7 +160,7 @@ void switchUPS()
   unsigned long time = millis();
   while (_isMainPower == digitalRead(MAIN_POWER_STATUS))
   {
-    if (millis() - time > 5000) //Основное питание с ардуины должно пропасть или появится не позже, чем через 5 секунд.
+    if (millis() - time > 7000) //Основное питание с ардуины должно пропасть или появится не позже, чем через 7 секунд.
     {
       if (_isMainPower) digitalWrite(BAT_5V_REGULATOR, LOW);
       blink(SWITCHING_POWER_ERROR);
